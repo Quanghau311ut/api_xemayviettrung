@@ -1,0 +1,84 @@
+var express = require('express');
+var router = express.Router();
+var connection = require('../service/dataconnect');
+
+router.get('/getall', function(req, res, next) {
+    var sql = "SELECT * FROM `san_pham`";
+    connection.query(sql, function(err, results) {
+        if (err) {
+            throw err;
+        }
+        console.log(results); // good
+        res.json(results);
+    })
+});
+
+router.get('/by-category/:id_loai', (req, res) => {
+    const id_loai = req.params.id_loai;
+
+    // Thực hiện truy vấn để lấy các sản phẩm thuộc danh mục có ID tương ứng
+    const getProductByCategoryQuery = 'SELECT * FROM san_pham WHERE id_loai = ?';
+
+    connection.query(getProductByCategoryQuery, [id_loai], (error, results, fields) => {
+        if (error) {
+            console.error('Lỗi truy vấn: ' + error);
+            res.status(500).send('Lỗi server');
+            return;
+        }
+
+        if (results.length === 0) {
+            res.status(404).send('Không có sản phẩm nào thuộc danh mục này');
+            return;
+        }
+
+        res.json(results); // Trả về danh sách sản phẩm thuộc danh mục có ID tương ứng
+    });
+});
+
+
+router.get('/get-once/:id', function(req, res) {
+    var query = 'SELECT * FROM san_pham WHERE id=' + req.params.id;
+    connection.query(query, function(error, result) {
+        if (error) res.send('Lổi thao tác csdl');
+        res.json(result);
+    });
+});
+
+router.post('/add', function(req, res) {
+    var query = "INSERT INTO san_pham(id_loai, id_ncc, ten, anh, mota, giaban, soluong, ghichu, trangthai,created_at) values('" + req.body.id_loai + "','" + req.body.id_ncc + "','" + req.body.ten + "','" + req.body.anh + "','" + req.body.mota + "','" + req.body.giaban + "','" + req.body.soluong + "','" + req.body.ghichu + "','" + req.body.trangthai + "', NOW())";
+    connection.query(query, function(error, result) {
+        if (error) res.send('Lổi thao tác csdl');
+        res.json(result);
+    });
+});
+
+
+router.put('/edit', (req, res) => {
+    console.log(req.body)
+    var query = "update san_pham SET id_loai='" + req.body[0].id_loai + "',id_ncc='" + req.body[0].id_ncc + "',ten='" + req.body[0].ten + "',anh='" + req.body[0].anh + "',mota = '" + req.body[0].mota + "',giaban='" + req.body[0].giaban + "',soluong='" + req.body[0].soluong + "',ghichu='" + req.body[0].ghichu + "',trangthai='" + req.body[0].trangthai + "', updated_at=NOW() WHERE id=" + req.body[0].id;
+    connection.query(query, function(error, result) {
+        if (error) res.send('Lổi thao tác csdl');
+        res.json(result);
+    });
+});
+
+router.delete('/delete/:id', (req, res) => {
+    const { id } = req.params;
+
+    const query = `DELETE FROM san_pham WHERE id = ${id}`;
+
+    connection.query(query, (err, result) => {
+        if (err) {
+            console.error('Error executing MySQL query:', err);
+            res.status(500).send('Error executing MySQL query');
+        } else {
+            console.log('Data deleted successfully');
+            res.status(200).send('Data deleted successfully');
+        }
+    });
+});
+
+
+module.exports = router;
+
+
