@@ -9,6 +9,10 @@ var fileupload = require('express-fileupload');
 
 var indexRouter = require('./routes/index');
 var usersRouter = require('./routes/users');
+
+
+
+
 // var apiloaispAPI = require('./api/apiloaisp');
 // var apisanphamAPI = require('./api/apisanpham');
 
@@ -32,13 +36,17 @@ var routerDanhmucxe=require('./routes/danhmucxeApi');
 var routerSlide=require('./routes/slideApi');
 var routerThuonghieu= require('./routes/thuonghieuApi');
 var routerKhachhang= require('./routes/khachhangApi');
-var routerNhacuncap=require('./routes/nhacungcapApi');
+var routerNhacungcap=require('./routes/nhacungcapApi');
 var routerDanhmuctintuc=require('./routes/danhmuctintucApi');
-var routerXemay=require('./routes/xemayApi.js');
-var routerAnhchitietxe=require('./routes/anhchitietxe.js');
-var routerThongSoKyThuat=require('./routes/thongsokythuatApi.js');
-var routerBinhLuan= require('./routes/binhluanApi.js');
-var routerBaiviet=require('./routes/baivietApi.js');
+var routerXemay=require('./routes/xemayApi');
+var routerAnhchitietxe=require('./routes/anhchitietxe');
+var routerThongSoKyThuat=require('./routes/thongsokythuatApi');
+var routerBinhLuan= require('./routes/binhluanApi');
+var routerBaiviet=require('./routes/baivietApi');
+
+
+var routerHoaDonNhap =require('./routes/hoadonnhapAPI');
+
 
 var app = express();
 
@@ -88,13 +96,16 @@ app.use("/danh-muc-xe",routerDanhmucxe);
 app.use("/slide",routerSlide);
 app.use("/thuong-hieu",routerThuonghieu);
 app.use("/khach-hang",routerKhachhang);
-app.use("/nha-cung-cap",routerNhacuncap);
+app.use("/nha-cung-cap",routerNhacungcap);
 app.use("/danh-muc-tin-tuc",routerDanhmuctintuc);
 app.use("/san-pham-xe-may",routerXemay);
 app.use("/anh-chi-tiet-xe",routerAnhchitietxe);
 app.use("/thong-so-ky-thuat",routerThongSoKyThuat);
 app.use("/binh-luan",routerBinhLuan);
 app.use("/bai-viet",routerBaiviet);
+app.use("/hoa-don-nhap",routerHoaDonNhap);
+
+
 
 app.use("/upload", uploadfileAPI);
 
