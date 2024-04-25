@@ -71,9 +71,26 @@ router.get('/get-one/:id', function(req, res) {
 
 
 //add
+const moment = require('moment');
+
 router.post('/add', function(req, res) {
     var hoaDonNhap = req.body.hoaDonNhap; // Thông tin của hóa đơn nhập
     var chiTietHoaDonNhap = req.body.chiTietHoaDonNhap; // Thông tin chi tiết của hóa đơn nhập
+
+    // Tính tổng giá từ các chi tiết hóa đơn nhập
+    var tongGia = 0;
+    chiTietHoaDonNhap.forEach(function(chiTiet) {
+        var tongTien = chiTiet.so_luong * chiTiet.gia_ban;
+        tongGia += tongTien;
+        chiTiet.tong_tien = tongTien;
+    });
+
+    // Lấy ngày hiện tại
+    var ngayHienTai = moment().format('YYYY-MM-DD');
+
+    // Cập nhật tổng giá vào thông tin của hóa đơn nhập
+    hoaDonNhap.tong_gia = tongGia;
+    hoaDonNhap.ngay = ngayHienTai;
 
     connection.beginTransaction(function(err) {
         if (err) {
@@ -96,10 +113,10 @@ router.post('/add', function(req, res) {
 
             // Thêm thông tin chi tiết của hóa đơn nhập
             var chiTietValues = chiTietHoaDonNhap.map(function(chiTiet) {
-                return [hoaDonNhapId, chiTiet.id_xe, chiTiet.so_luong, chiTiet.gia_ban, chiTiet.gia_ban * chiTiet.so_luong];
+                return [hoaDonNhapId, chiTiet.id_xe, chiTiet.so_luong, chiTiet.gia_ban, chiTiet.tong_tien];
             });
 
-            connection.query('INSERT INTO chitiethoadonnhap (id_hoa_don_nhap, id_xe, so_luong, gia_ban, tong_gia) VALUES ?', [chiTietValues], function(err, result) {
+            connection.query('INSERT INTO chitiethoadonnhap (id_hoa_don_nhap, id_xe, so_luong, gia_ban, tong_tien) VALUES ?', [chiTietValues], function(err, result) {
                 if (err) {
                     connection.rollback(function() {
                         console.error('Lỗi khi thêm thông tin chi tiết hóa đơn nhập:', err);
@@ -124,7 +141,6 @@ router.post('/add', function(req, res) {
         });
     });
 });
-
 
 
 

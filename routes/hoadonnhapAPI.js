@@ -1,6 +1,7 @@
 var express = require('express');
 var router = express.Router();
 var connection = require('../service/dataconnect');
+const moment = require('moment');
 
 //getall
 router.get('/get-all', function(req, res) {
@@ -27,7 +28,7 @@ router.get('/get-all', function(req, res) {
 router.get('/get-one/:id', function(req, res) {
     var id = req.params.id;
     var query = `
-        SELECT *
+        SELECT chitiethoadonnhap.*, quanlyhoadonnhap.id_hoa_don_nhap as hoa_don_id, quanlyhoadonnhap.id_nha_cung_cap, quanlyhoadonnhap.tong_gia, quanlyhoadonnhap.ngay, quanlyhoadonnhap.created_at as hoa_don_created_at, quanlyhoadonnhap.updated_at as hoa_don_updated_at
         FROM quanlyhoadonnhap
         INNER JOIN chitiethoadonnhap ON quanlyhoadonnhap.id_hoa_don_nhap = chitiethoadonnhap.id_hoa_don_nhap
         WHERE quanlyhoadonnhap.id_hoa_don_nhap = ?
@@ -39,7 +40,7 @@ router.get('/get-one/:id', function(req, res) {
             res.status(500).send('Lỗi thao tác với cơ sở dữ liệu');
         } else {
             if (results.length > 0) {
-                res.json(results[0]);
+                res.json(results);
             } else {
                 res.status(404).send('Không tìm thấy hóa đơn nhập với ID đã cho');
             }
@@ -48,119 +49,256 @@ router.get('/get-one/:id', function(req, res) {
 });
 
 
+
 //add
+
+// router.post('/add', function(req, res) {
+//     var hoaDonNhap = req.body.hoaDonNhap; // Thông tin của hóa đơn nhập
+//     var chiTietHoaDonNhap = req.body.chiTietHoaDonNhap; // Thông tin chi tiết của hóa đơn nhập
+
+//     connection.beginTransaction(function(err) {
+//         if (err) {
+//             console.error('Lỗi khởi tạo giao dịch:', err);
+//             res.status(500).send('Lỗi khởi tạo giao dịch');
+//             return;
+//         }
+
+//         // Thêm hóa đơn nhập
+//         connection.query('INSERT INTO quanlyhoadonnhap SET ?', hoaDonNhap, function(error, result) {
+//             if (error) {
+//                 connection.rollback(function() {
+//                     console.error('Lỗi khi thêm hóa đơn nhập:', error);
+//                     res.status(500).send('Lỗi khi thêm hóa đơn nhập');
+//                 });
+//                 return;
+//             }
+
+//             var hoaDonNhapId = result.insertId;
+
+//             // Thêm thông tin chi tiết của hóa đơn nhập
+//             var chiTietValues = chiTietHoaDonNhap.map(function(chiTiet) {
+//                 return [hoaDonNhapId, chiTiet.id_xe, chiTiet.so_luong, chiTiet.gia_ban, chiTiet.gia_ban * chiTiet.so_luong];
+//             });
+
+//             connection.query('INSERT INTO chitiethoadonnhap (id_hoa_don_nhap, id_xe, so_luong, gia_ban, tong_gia) VALUES ?', [chiTietValues], function(err, result) {
+//                 if (err) {
+//                     connection.rollback(function() {
+//                         console.error('Lỗi khi thêm thông tin chi tiết hóa đơn nhập:', err);
+//                         res.status(500).send('Lỗi khi thêm thông tin chi tiết hóa đơn nhập');
+//                     });
+//                     return;
+//                 }
+
+//                 // Cập nhật số lượng trong bảng quanlyxemay
+//                 var updatePromises = chiTietHoaDonNhap.map(function(chiTiet) {
+//                     return new Promise(function(resolve, reject) {
+//                         connection.query('UPDATE quanlyxemay SET so_luong = so_luong + ? WHERE id_xe = ?', [chiTiet.so_luong, chiTiet.id_xe], function(err, result) {
+//                             if (err) {
+//                                 reject(err);
+//                             } else {
+//                                 resolve();
+//                             }
+//                         });
+//                     });
+//                 });
+
+//                 Promise.all(updatePromises)
+//                     .then(function() {
+//                         // Commit giao dịch nếu mọi thứ thành công
+//                         connection.commit(function(err) {
+//                             if (err) {
+//                                 connection.rollback(function() {
+//                                     console.error('Lỗi khi commit giao dịch:', err);
+//                                     res.status(500).send('Lỗi khi commit giao dịch');
+//                                 });
+//                                 return;
+//                             }
+//                             console.log('Thêm hóa đơn nhập và thông tin chi tiết thành công!');
+//                             res.status(200).send('Thêm hóa đơn nhập và thông tin chi tiết thành công!');
+//                         });
+//                     })
+//                     .catch(function(err) {
+//                         connection.rollback(function() {
+//                             console.error('Lỗi khi cập nhật số lượng xe máy:', err);
+//                             res.status(500).send('Lỗi khi cập nhật số lượng xe máy');
+//                         });
+//                     });
+//             });
+//         });
+//     });
+// });
+
 router.post('/add', function(req, res) {
-    console.log("Dữ liệu hóa đơn nhập nhận được:", req.body); // Kiểm tra dữ liệu nhận được từ client
+    var hoaDonNhap = req.body.hoaDonNhap; // Thông tin của hóa đơn nhập
+    var chiTietHoaDonNhap = req.body.chiTietHoaDonNhap; // Thông tin chi tiết của hóa đơn nhập
 
-    // Kiểm tra xem tất cả các trường cần thiết đã được cung cấp chưa
-    if (!req.body || !req.body.id_nha_cung_cap || !req.body.chi_tiet_hoa_don_nhap) {
-        return res.status(400).send('Yêu cầu thiếu thông tin');
-    }
+    // Tính tổng giá từ các chi tiết hóa đơn nhập
+    var tongGia = chiTietHoaDonNhap.reduce(function(total, chiTiet) {
+        return total + (chiTiet.gia_ban * chiTiet.so_luong);
+    }, 0);
 
-    // Bắt đầu một transaction
+    // Gán tổng giá cho trường tong_gia của hóa đơn nhập
+    hoaDonNhap.tong_gia = tongGia;
+
     connection.beginTransaction(function(err) {
         if (err) {
-            console.error('Lỗi bắt đầu transaction:', err);
-            return res.status(500).send('Lỗi thao tác với cơ sở dữ liệu');
+            console.error('Lỗi khởi tạo giao dịch:', err);
+            res.status(500).send('Lỗi khởi tạo giao dịch');
+            return;
         }
 
-        var tongTienHoaDonNhap = 0;
-        var chiTietHoaDonNhap = req.body.chi_tiet_hoa_don_nhap;
-
         // Thêm hóa đơn nhập
-        var queryInsertHoaDonNhap = "INSERT INTO quanlyhoadonnhap (id_nha_cung_cap, ngay, created_at, updated_at) VALUES (?, CURDATE(), CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)";
-        var valuesHoaDonNhap = [req.body.id_nha_cung_cap];
-
-        connection.query(queryInsertHoaDonNhap, valuesHoaDonNhap, function(error, resultHoaDonNhap) {
+        connection.query('INSERT INTO quanlyhoadonnhap SET ?', hoaDonNhap, function(error, result) {
             if (error) {
-                return connection.rollback(function() {
-                    console.error('Lỗi thao tác với cơ sở dữ liệu (Hóa đơn nhập):', error);
-                    res.status(500).send('Lỗi thao tác với cơ sở dữ liệu');
+                connection.rollback(function() {
+                    console.error('Lỗi khi thêm hóa đơn nhập:', error);
+                    res.status(500).send('Lỗi khi thêm hóa đơn nhập');
                 });
+                return;
             }
 
-            console.log('Thêm thành công hóa đơn nhập:', resultHoaDonNhap);
+            var hoaDonNhapId = result.insertId;
 
-            // Lấy ID của hóa đơn nhập vừa được thêm
-            var idHoaDonNhap = resultHoaDonNhap.insertId;
-
-            // Thêm chi tiết hóa đơn nhập
-            var queryInsertChiTietHoaDonNhap = "INSERT INTO chitiethoadonnhap (id_hoa_don_nhap, id_xe, so_luong, gia_ban, tong_gia, created_at, updated_at) VALUES ?";
-            var valuesChiTietHoaDonNhap = [];
-
-            chiTietHoaDonNhap.forEach(function(item) {
-                var tongGia = item.so_luong * item.gia_ban;
-                tongTienHoaDonNhap += tongGia; // Tính tổng tiền của hóa đơn nhập
-                valuesChiTietHoaDonNhap.push([idHoaDonNhap, item.id_xe, item.so_luong, item.gia_ban, tongGia, new Date(), new Date()]);
+            // Thêm thông tin chi tiết của hóa đơn nhập
+            var chiTietValues = chiTietHoaDonNhap.map(function(chiTiet) {
+                return [hoaDonNhapId, chiTiet.id_xe, chiTiet.so_luong, chiTiet.gia_ban, chiTiet.gia_ban * chiTiet.so_luong];
             });
-
-            connection.query(queryInsertChiTietHoaDonNhap, [valuesChiTietHoaDonNhap], function(error, resultChiTietHoaDonNhap) {
-                if (error) {
-                    return connection.rollback(function() {
-                        console.error('Lỗi thao tác với cơ sở dữ liệu (Chi tiết hóa đơn nhập):', error);
-                        res.status(500).send('Lỗi thao tác với cơ sở dữ liệu');
+            
+            connection.query('INSERT INTO chitiethoadonnhap (id_hoa_don_nhap, id_xe, so_luong, gia_ban, tong_gia) VALUES ?', [chiTietValues], function(err, result) {
+                if (err) {
+                    connection.rollback(function() {
+                        console.error('Lỗi khi thêm thông tin chi tiết hóa đơn nhập:', err);
+                        res.status(500).send('Lỗi khi thêm thông tin chi tiết hóa đơn nhập');
                     });
+                    return;
                 }
 
-                console.log('Thêm thành công chi tiết hóa đơn nhập:', resultChiTietHoaDonNhap);
-
-                // Cập nhật số lượng sản phẩm trong bảng quanlyxemay
-                var queryUpdateSoLuongXe = "UPDATE quanlyxemay SET so_luong = so_luong + ? WHERE id_xe = ?";
-                var valuesUpdateSoLuongXe = [];
-
-                chiTietHoaDonNhap.forEach(function(item) {
-                    valuesUpdateSoLuongXe.push(item.so_luong); // Giá trị mới của số lượng
-                    valuesUpdateSoLuongXe.push(item.id_xe);    // Điều kiện WHERE
-                });
-
-                connection.query(queryUpdateSoLuongXe, valuesUpdateSoLuongXe, function(error, resultUpdateSoLuongXe) {
-                    if (error) {
-                        return connection.rollback(function() {
-                            console.error('Lỗi thao tác với cơ sở dữ liệu (Cập nhật số lượng xe máy):', error);
-                            res.status(500).send('Lỗi thao tác với cơ sở dữ liệu');
-                        });
-                    }
-
-                    console.log('Cập nhật số lượng xe máy thành công:', resultUpdateSoLuongXe);
-
-                    // Cập nhật tổng tiền của hóa đơn nhập
-                    var queryUpdateTongTienHoaDonNhap = "UPDATE quanlyhoadonnhap SET tong_gia = ? WHERE id_hoa_don_nhap = ?";
-                    connection.query(queryUpdateTongTienHoaDonNhap, [tongTienHoaDonNhap, idHoaDonNhap], function(error, resultUpdateTongTienHoaDonNhap) {
-                        if (error) {
-                            return connection.rollback(function() {
-                                console.error('Lỗi thao tác với cơ sở dữ liệu (Cập nhật tổng tiền hóa đơn nhập):', error);
-                                res.status(500).send('Lỗi thao tác với cơ sở dữ liệu');
-                            });
-                        }
-
-                        console.log('Cập nhật tổng tiền của hóa đơn nhập thành công:', resultUpdateTongTienHoaDonNhap);
-
-                        // Commit transaction
-                        connection.commit(function(err) {
+                // Cập nhật số lượng trong bảng quanlyxemay
+                var updatePromises = chiTietHoaDonNhap.map(function(chiTiet) {
+                    return new Promise(function(resolve, reject) {
+                        connection.query('UPDATE quanlyxemay SET so_luong = so_luong + ? WHERE id_xe = ?', [chiTiet.so_luong, chiTiet.id_xe], function(err, result) {
                             if (err) {
-                                return connection.rollback(function() {
-                                    console.error('Lỗi commit transaction:', err);
-                                    res.status(500).send('Lỗi thao tác với cơ sở dữ liệu');
-                                });
+                                reject(err);
+                            } else {
+                                resolve();
                             }
-                            console.log('Commit transaction thành công!');
-                            res.json({ message: 'Thêm thành công hóa đơn nhập và chi tiết hóa đơn nhập' });
                         });
                     });
                 });
+
+                Promise.all(updatePromises)
+                    .then(function() {
+                        // Commit giao dịch nếu mọi thứ thành công
+                        connection.commit(function(err) {
+                            if (err) {
+                                connection.rollback(function() {
+                                    console.error('Lỗi khi commit giao dịch:', err);
+                                    res.status(500).send('Lỗi khi commit giao dịch');
+                                });
+                                return;
+                            }
+                            console.log('Thêm hóa đơn nhập và thông tin chi tiết thành công!');
+                            res.status(200).send('Thêm hóa đơn nhập và thông tin chi tiết thành công!');
+                        });
+                    })
+                    .catch(function(err) {
+                        connection.rollback(function() {
+                            console.error('Lỗi khi cập nhật số lượng xe máy:', err);
+                            res.status(500).send('Lỗi khi cập nhật số lượng xe máy');
+                        });
+                    });
             });
         });
     });
 });
 
 
-
-
-
 //edit
 
 
 //delete    
+router.delete('/delete/:id', function(req, res) {
+    var idHoaDonNhap = req.params.id;
+
+    connection.beginTransaction(function(err) {
+        if (err) {
+            console.error('Lỗi khởi tạo giao dịch:', err);
+            res.status(500).send('Lỗi khởi tạo giao dịch');
+            return;
+        }
+
+        // Lấy thông tin số lượng của từng chi tiết hóa đơn nhập
+        var selectChiTietQuery = 'SELECT id_xe, so_luong FROM chitiethoadonnhap WHERE id_hoa_don_nhap = ?';
+        connection.query(selectChiTietQuery, idHoaDonNhap, function(error, results) {
+            if (error) {
+                connection.rollback(function() {
+                    console.error('Lỗi khi truy vấn thông tin chi tiết hóa đơn nhập:', error);
+                    res.status(500).send('Lỗi khi truy vấn thông tin chi tiết hóa đơn nhập');
+                });
+                return;
+            }
+
+            // Cập nhật số lượng trong bảng quanlyxemay
+            var updatePromises = results.map(function(chiTiet) {
+                return new Promise(function(resolve, reject) {
+                    connection.query('UPDATE quanlyxemay SET so_luong = so_luong - ? WHERE id_xe = ?', [chiTiet.so_luong, chiTiet.id_xe], function(err, result) {
+                        if (err) {
+                            reject(err);
+                        } else {
+                            resolve();
+                        }
+                    });
+                });
+            });
+
+            // Xóa thông tin chi tiết hóa đơn nhập
+            var deleteChiTietQuery = 'DELETE FROM chitiethoadonnhap WHERE id_hoa_don_nhap = ?';
+            connection.query(deleteChiTietQuery, idHoaDonNhap, function(error, result) {
+                if (error) {
+                    connection.rollback(function() {
+                        console.error('Lỗi khi xóa thông tin chi tiết hóa đơn nhập:', error);
+                        res.status(500).send('Lỗi khi xóa thông tin chi tiết hóa đơn nhập');
+                    });
+                    return;
+                }
+
+                // Xóa hóa đơn nhập
+                var deleteHoaDonQuery = 'DELETE FROM quanlyhoadonnhap WHERE id_hoa_don_nhap = ?';
+                connection.query(deleteHoaDonQuery, idHoaDonNhap, function(error, result) {
+                    if (error) {
+                        connection.rollback(function() {
+                            console.error('Lỗi khi xóa hóa đơn nhập:', error);
+                            res.status(500).send('Lỗi khi xóa hóa đơn nhập');
+                        });
+                        return;
+                    }
+
+                    // Commit giao dịch nếu mọi thứ thành công
+                    Promise.all(updatePromises)
+                        .then(function() {
+                            connection.commit(function(err) {
+                                if (err) {
+                                    connection.rollback(function() {
+                                        console.error('Lỗi khi commit giao dịch:', err);
+                                        res.status(500).send('Lỗi khi commit giao dịch');
+                                    });
+                                    return;
+                                }
+                                console.log('Xóa hóa đơn nhập và cập nhật số lượng xe máy thành công!');
+                                res.status(200).send('Xóa hóa đơn nhập và cập nhật số lượng xe máy thành công!');
+                            });
+                        })
+                        .catch(function(err) {
+                            connection.rollback(function() {
+                                console.error('Lỗi khi cập nhật số lượng xe máy:', err);
+                                res.status(500).send('Lỗi khi cập nhật số lượng xe máy');
+                            });
+                        });
+                });
+            });
+        });
+    });
+});
 
 
 

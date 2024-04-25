@@ -13,7 +13,7 @@ router.get('/get-all', function(req, res) {
 
 //get-one
 router.get('/get-one/:id_thuong_hieu', function(req, res) {
-    var id_thuong_hieu = req.params.ten_thuong_hieu;
+    var id_thuong_hieu = req.params.id_thuong_hieu;
     var query = 'SELECT * FROM quanlythuonghieu WHERE id_thuong_hieu = ?';
 
     connection.query(query, id_thuong_hieu, function(error, result) {
@@ -65,7 +65,7 @@ router.put('/edit/:id_thuong_hieu', function(req, res) {
 
     var id_thuong_hieu = req.params.id_thuong_hieu;
     var query = "UPDATE quanlythuonghieu SET ten_thuong_hieu = ?, updated_at = CURRENT_TIMESTAMP WHERE id_thuong_hieu = ?";
-    var values = [req.body.ten_danh_muc, id_danh_muc];
+    var values = [req.body.ten_thuong_hieu, id_thuong_hieu]; // Fixed typo here
 
     connection.query(query, values, function(error, result) {
         if (error) {
@@ -77,6 +77,7 @@ router.put('/edit/:id_thuong_hieu', function(req, res) {
         }
     });
 });
+
 
 
 

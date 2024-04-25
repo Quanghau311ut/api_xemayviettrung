@@ -28,7 +28,7 @@ var usersRouter = require('./routes/users');
 // var apiGioHang=require('./api/donhang');
 // var apiAcount=require('./api/taikhoan');
 
-
+//khai báo đường dẫn đến thư mục "uploads"
 var uploadfileAPI = require('./routes/uploadfile')
 
 var routerMenu= require('./routes/menuApi');
@@ -43,6 +43,8 @@ var routerAnhchitietxe=require('./routes/anhchitietxe');
 var routerThongSoKyThuat=require('./routes/thongsokythuatApi');
 var routerBinhLuan= require('./routes/binhluanApi');
 var routerBaiviet=require('./routes/baivietApi');
+var routerDathang= require('./routes/dathang');
+var routerHoaDonXuat= require('./routes/hoadonxuatApi');
 
 
 var routerHoaDonNhap =require('./routes/hoadonnhapAPI');
@@ -70,6 +72,8 @@ app.use(logger('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
+
+//cầu hình để biết vị trí thư mục "uploads"
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(fileupload());
 
@@ -104,13 +108,15 @@ app.use("/thong-so-ky-thuat",routerThongSoKyThuat);
 app.use("/binh-luan",routerBinhLuan);
 app.use("/bai-viet",routerBaiviet);
 app.use("/hoa-don-nhap",routerHoaDonNhap);
-
-
-
-app.use("/upload", uploadfileAPI);
+app.use("/hoa-don-xuat",routerHoaDonXuat);
+app.use("/don-hang",routerDathang);
 
 
 app.use("/public/uploads/", express.static("public/uploads/"))
+app.use("/upload", uploadfileAPI);
+
+
+
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
