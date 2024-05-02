@@ -5,14 +5,9 @@ const connection = mysql.createConnection({
     host: '127.0.0.1',
     user: 'root',
     password: '002882',
-    database: 'qlcuahangxemayviettrung',
+    database: 'hethongxemayviettrung',
 });
-// const connection = mysql.createConnection({
-//     host: '127.0.0.1',
-//     user: 'root',
-//     password: '',
-//     database: 'qlch_banxemayviettrung',
-// });
+
 
 
 connection.connect((err) => {
