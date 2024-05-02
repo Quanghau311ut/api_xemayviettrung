@@ -4,6 +4,7 @@ var path = require('path');
 var cookieParser = require('cookie-parser');
 var logger = require('morgan');
 const bodyparser = require('body-parser');
+
 //thu vien upload file
 var fileupload = require('express-fileupload');
 
@@ -29,7 +30,7 @@ var usersRouter = require('./routes/users');
 // var apiAcount=require('./api/taikhoan');
 
 //khai báo đường dẫn đến thư mục "uploads"
-var uploadfileAPI = require('./routes/uploadfile')
+var uploadfileAPI = require('./routes/uploadfile');
 
 var routerMenu= require('./routes/menuApi');
 var routerDanhmucxe=require('./routes/danhmucxeApi');
@@ -45,6 +46,7 @@ var routerBinhLuan= require('./routes/binhluanApi');
 var routerBaiviet=require('./routes/baivietApi');
 var routerDathang= require('./routes/dathang');
 var routerHoaDonXuat= require('./routes/hoadonxuatApi');
+var routerDanhGia= require('./routes/danhgiaApi');
 
 
 var routerHoaDonNhap =require('./routes/hoadonnhapAPI');
@@ -65,6 +67,7 @@ app.use(cors({
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'ejs');
+
 // app.set('view engine', 'hbs');
 app.use(bodyparser.urlencoded({ extended: true }));
 app.use(bodyparser.json());
@@ -110,10 +113,11 @@ app.use("/bai-viet",routerBaiviet);
 app.use("/hoa-don-nhap",routerHoaDonNhap);
 app.use("/hoa-don-xuat",routerHoaDonXuat);
 app.use("/don-hang",routerDathang);
+app.use("/upload", uploadfileAPI);
+app.use("/danh-gia",routerDanhGia);
 
 
 app.use("/public/uploads/", express.static("public/uploads/"))
-app.use("/upload", uploadfileAPI);
 
 
 
@@ -133,6 +137,10 @@ app.use(function(err, req, res, next) {
     res.status(err.status || 500);
     res.render('error');
 });
+// app.use(function(err, req, res, next) {
+//     res.status(err.status || 500);
+//     res.send('Lỗi: ' + err.message);
+// });
 
 
 

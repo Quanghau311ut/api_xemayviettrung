@@ -53,7 +53,7 @@ router.post('/add', function(req, res) {
 
 
 //edit
-router.put('/edit/:id_menu', function(req, res) {
+router.post('/edit/:id_menu', function(req, res) {
     console.log("Dữ liệu nhận được:", req.body); // Kiểm tra dữ liệu nhận được từ client
 
     // Kiểm tra xem các trường ten_menu và link có tồn tại không

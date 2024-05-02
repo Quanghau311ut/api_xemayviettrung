@@ -3,9 +3,10 @@ var route = express();
 var path = require('path');
 var duongdan = path.join(__dirname, '../public');
 
-route.post('/', (req, res) => {
+route.post('/', (req, res) => { // Thay đổi đường dẫn API thành '/upload'
     var filepath;
     var fileupload;
+    
     if (!req.files) res.status(400).send('Bạn chưa chọn file để tải lên');
     fileupload = req.files.fileanh;
     filepath = duongdan + "/uploads/" + fileupload.name;
