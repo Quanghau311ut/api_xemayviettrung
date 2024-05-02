@@ -55,7 +55,7 @@ router.post('/add', function(req, res) {
 
 
 //edit
-router.put('/edit/:id_thuong_hieu', function(req, res) {
+router.post('/edit/:id_thuong_hieu', function(req, res) {
     console.log("Dữ liệu nhận được:", req.body); // Kiểm tra dữ liệu nhận được từ client
 
     // Kiểm tra xem các trường id_danh_muc và ten_danh_muc có tồn tại không

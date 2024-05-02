@@ -105,7 +105,7 @@ app.use("/thuong-hieu",routerThuonghieu);
 app.use("/khach-hang",routerKhachhang);
 app.use("/nha-cung-cap",routerNhacungcap);
 app.use("/danh-muc-tin-tuc",routerDanhmuctintuc);
-app.use("/san-pham-xe-may",routerXemay);
+app.use("/xe-may",routerXemay);
 app.use("/anh-chi-tiet-xe",routerAnhchitietxe);
 app.use("/thong-so-ky-thuat",routerThongSoKyThuat);
 app.use("/binh-luan",routerBinhLuan);

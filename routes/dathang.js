@@ -139,7 +139,7 @@ router.post('/add', function(req, res) {
 
 
 //cập nhật trạng thái đơn hàng
-router.put('/trang-thai-don-hang/:id_don_hang', function(req, res) {
+router.post('/trang-thai-don-hang/:id_don_hang', function(req, res) {
     var orderId = req.params.id_don_hang;
     var newStatus = req.body.trang_thai;
 

@@ -36,7 +36,7 @@ router.post('/add', function(req, res) {
         return res.status(400).send('Yêu cầu thiếu thông tin');
     }
 
-    var query = "INSERT INTO qlcuahangxemayviettrung.quanlymenu (ten_menu, link, created_at, updated_at) VALUES (?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)";
+    var query = "INSERT INTO quanlymenu (ten_menu, link, created_at, updated_at) VALUES (?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)";
     var values = [req.body.ten_menu, req.body.link];
 
     connection.query(query, values, function(error, result) {

@@ -65,7 +65,7 @@ router.post('/add', function(req, res) {
 
 
 //edit
-router.put('/edit/:id_thong_so_ky_thuat', function(req, res) {
+router.post('/edit/:id_thong_so_ky_thuat', function(req, res) {
     console.log("Dữ liệu nhận được:", req.body); // Kiểm tra dữ liệu nhận được từ client
 
     // Kiểm tra xem các trường thông tin cần thiết đã được cung cấp chưa
@@ -108,7 +108,7 @@ router.delete('/delete/:id_thong_so_ky_thuat', function(req, res) {
 
 
 //search
-router.post('/search', function(req, res) {
+router.get('/search', function(req, res) {
     console.log("Dữ liệu nhận được:", req.body); // Kiểm tra dữ liệu nhận được từ client
 
     // Tạo câu truy vấn SQL để tìm kiếm thông số kỹ thuật dựa trên từ khóa tìm kiếm

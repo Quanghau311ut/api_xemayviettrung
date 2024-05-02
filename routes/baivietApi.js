@@ -64,7 +64,7 @@ router.post('/add', function(req, res) {
 
 
 //edit
-router.put('/edit/:id_bai_viet', function(req, res) {
+router.post('/edit/:id_bai_viet', function(req, res) {
     console.log("Dữ liệu nhận được:", req.body); // Kiểm tra dữ liệu nhận được từ client
 
     // Kiểm tra xem các trường cần thiết có được cung cấp không

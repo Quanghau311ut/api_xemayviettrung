@@ -65,7 +65,7 @@ router.post('/add', function(req, res) {
 
 
 //edit
-router.put('/edit/:id_nha_cung_cap', function(req, res) {
+router.post('/edit/:id_nha_cung_cap', function(req, res) {
     console.log("Dữ liệu nhận được:", req.body); // Kiểm tra dữ liệu nhận được từ client
 
     // Kiểm tra xem tất cả các trường cần thiết đã được cung cấp chưa
