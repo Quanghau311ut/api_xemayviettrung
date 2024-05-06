@@ -144,8 +144,8 @@ router.post('/add', function(req, res) {
     console.log("Dữ liệu nhận được:", req.body); // Kiểm tra dữ liệu nhận được từ client
 
     // Kiểm tra xem các trường thông tin cần thiết đã được cung cấp chưa
-    if (!req.body || !req.body.xe || !req.body.anhChiTiet || !req.body.thongSoKyThuat) {
-        return res.status(400).send('Yêu cầu thiếu thông tin');
+    if (!req.body || !req.body.xe || !req.body.anhChiTiet || !req.body.thongSoKyThuat || !req.body.xe.anh_dai_dien) {
+        return res.status(400).send('Yêu cầu thiếu thông tin hoặc trường anh_dai_dien không được tải lên');
     }
 
     // Bắt đầu một transaction để đảm bảo tính nhất quán của cơ sở dữ liệu
@@ -156,8 +156,8 @@ router.post('/add', function(req, res) {
         }
 
         // Thêm thông tin xe vào bảng quanlyxemay
-        var queryXe = "INSERT INTO quanlyxemay (id_thuong_hieu, id_danh_muc, ten_xe, model, mau_sac, nam_san_xuat, gia, so_luong, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)";
-        var valuesXe = [req.body.xe.id_thuong_hieu, req.body.xe.id_danh_muc, req.body.xe.ten_xe, req.body.xe.model, req.body.xe.mau_sac, req.body.xe.nam_san_xuat, req.body.xe.gia, req.body.xe.so_luong];
+        var queryXe = "INSERT INTO quanlyxemay (id_thuong_hieu, id_danh_muc, ten_xe, model, mau_sac, nam_san_xuat, gia, so_luong, anh_dai_dien, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)";
+        var valuesXe = [req.body.xe.id_thuong_hieu, req.body.xe.id_danh_muc, req.body.xe.ten_xe, req.body.xe.model, req.body.xe.mau_sac, req.body.xe.nam_san_xuat, req.body.xe.gia, req.body.xe.so_luong, req.body.xe.anh_dai_dien];
 
         connection.query(queryXe, valuesXe, function(errorXe, resultXe) {
             if (errorXe) {
@@ -314,19 +314,41 @@ router.post('/edit/:id_xe', function(req, res) {
 //delete    
 router.delete('/delete/:id_xe', function(req, res) {
     var id_xe = req.params.id_xe;
-    var query = 'DELETE FROM quanlyxemay WHERE id_xe = ?';
-
-    connection.query(query, id_xe, function(error, result) {
+    
+    // Xóa thông số kỹ thuật của xe
+    var queryDeleteThongSoKyThuat = "DELETE FROM thongsokythuat WHERE id_xe = ?";
+    connection.query(queryDeleteThongSoKyThuat, [id_xe], function(error, resultDeleteThongSoKyThuat) {
         if (error) {
-            console.error('Lỗi thao tác với cơ sở dữ liệu:', error);
-            res.status(500).send('Lỗi thao tác với cơ sở dữ liệu');
+            console.error('Lỗi khi xóa thông số kỹ thuật:', error);
+            return res.status(500).send('Lỗi khi xóa thông số kỹ thuật');
         } else {
-            console.log('Xóa thành công bản ghi:', result);
-            res.json(result);
+            console.log('Xóa thành công thông số kỹ thuật:', resultDeleteThongSoKyThuat);
+
+            // Xóa ảnh chi tiết của xe
+            var queryDeleteAnhChiTiet = "DELETE FROM anhchitiet WHERE id_xe = ?";
+            connection.query(queryDeleteAnhChiTiet, [id_xe], function(error, resultDeleteAnhChiTiet) {
+                if (error) {
+                    console.error('Lỗi khi xóa ảnh chi tiết:', error);
+                    return res.status(500).send('Lỗi khi xóa ảnh chi tiết');
+                } else {
+                    console.log('Xóa thành công ảnh chi tiết:', resultDeleteAnhChiTiet);
+
+                    // Xóa xe từ bảng quản lý xe máy
+                    var queryDeleteXe = 'DELETE FROM quanlyxemay WHERE id_xe = ?';
+                    connection.query(queryDeleteXe, id_xe, function(error, resultDeleteXe) {
+                        if (error) {
+                            console.error('Lỗi khi xóa xe:', error);
+                            return res.status(500).send('Lỗi khi xóa xe');
+                        } else {
+                            console.log('Xóa thành công xe:', resultDeleteXe);
+                            res.json(resultDeleteXe);
+                        }
+                    });
+                }
+            });
         }
     });
 });
-
 
 
 

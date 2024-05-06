@@ -14,20 +14,6 @@ var usersRouter = require('./routes/users');
 
 
 
-// var apiloaispAPI = require('./api/apiloaisp');
-// var apisanphamAPI = require('./api/apisanpham');
-
-// var apinccAPI = require('./api/apincc');
-// var apiNhaSanXuat=require('./api/nhasanxuat');
-// var apiMenu=require('./api/menu');
-// var apiPhanHoi=require('./api/apiPhanHoi');
-// var apiSlide= require('./api/apiSlide');
-// var apiLoaiTin=require('./api/tintuc');
-// var apiBaiViet=require('./api/baiviet');
-// var apiChiTietSanPham=require('./api/chitietsanpham');
-// var apiChiTietAnhSP=require('./api/chitietanhSP');
-// var apiGioHang=require('./api/donhang');
-// var apiAcount=require('./api/taikhoan');
 
 //khai báo đường dẫn đến thư mục "uploads"
 var uploadfileAPI = require('./routes/uploadfile');
@@ -82,21 +68,6 @@ app.use(fileupload());
 
 app.use('/', indexRouter);
 app.use('/users', usersRouter);
-// app.use('/loaisp', apiloaispAPI);
-// app.use('/sanpham', apisanphamAPI);
-
-// app.use("/nhacungcap", apinccAPI);
-// app.use("/nhasanxuat",apiNhaSanXuat);
-// app.use("/menu",apiMenu);
-// app.use("/phanhoi",apiPhanHoi);
-// app.use("/slide",apiSlide);
-// app.use("/loaiTin",apiLoaiTin);
-// app.use("/baiviet",apiBaiViet);
-// app.use("/ThongSoKyThuat",apiChiTietSanPham);
-// app.use("/chitietanhSP",apiChiTietAnhSP);
-// app.use("/donhang",apiGioHang);
-// app.use("/taikhoan",apiAcount);
-
 
 app.use("/menu",routerMenu);
 app.use("/danh-muc-xe",routerDanhmucxe);
@@ -141,7 +112,13 @@ app.use(function(err, req, res, next) {
 //     res.status(err.status || 500);
 //     res.send('Lỗi: ' + err.message);
 // });
-
+app.use(function(err, req, res, next) {
+    // Ghi log lỗi vào console
+    console.error(err.stack);
+    
+    // Render trang "error" với thông báo lỗi
+    res.status(500).render('error', { error: err });
+});
 
 
 module.exports = app;

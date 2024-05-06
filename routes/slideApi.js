@@ -60,6 +60,7 @@ router.post('/add', function(req, res) {
 
 
 //edit
+//edit
 router.post('/edit/:id_slide', function(req, res) {
     console.log("Dữ liệu nhận được:", req.body); // Kiểm tra dữ liệu nhận được từ client
 
@@ -81,6 +82,7 @@ router.post('/edit/:id_slide', function(req, res) {
         }
     });
 });
+
 
 
 
