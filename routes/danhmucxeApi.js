@@ -53,26 +53,31 @@ router.post('/add', function(req, res) {
 
 
 
+
+//edit
 router.post('/edit/:id_danh_muc', function(req, res) {
-    if (!req.body || !Array.isArray(req.body) || req.body.length === 0) {
-      res.status(400).send('Invalid request body');
-      return;
+    console.log("Dữ liệu nhận được:", req.body); // Kiểm tra dữ liệu nhận được từ client
+
+    // Kiểm tra xem các trường id_danh_muc và ten_danh_muc có tồn tại không
+    if (!req.body || !req.body.ten_danh_muc) {
+        return res.status(400).send('Yêu cầu thiếu thông tin');
     }
-  
-    console.log(req.body);
-  
-    var query = "UPDATE danh_muc_xe SET ten_danh_muc=?, mo_ta=?, updated_at=NOW() WHERE id_danh_muc=?";
-    var values = [req.body[0].ten_danh_muc, req.body[0].mo_ta, req.params.id_danh_muc];
-  
+
+    var id_danh_muc = req.params.id_danh_muc;
+    var query = "UPDATE quanlydanhmucxemay SET ten_danh_muc = ?, updated_at = CURRENT_TIMESTAMP WHERE id_danh_muc = ?";
+    var values = [req.body.ten_danh_muc, id_danh_muc];
+
     connection.query(query, values, function(error, result) {
-      if (error) {
-        console.error(error);
-        res.status(500).send('Lỗi thao tác csdl: ' + error.message);
-      } else {
-        res.json(result);
-      }
+        if (error) {
+            console.error('Lỗi thao tác với cơ sở dữ liệu:', error);
+            res.status(500).send('Lỗi thao tác với cơ sở dữ liệu');
+        } else {
+            console.log('Sửa thành công bản ghi:', result);
+            res.json(result);
+        }
     });
-  });
+});
+
 
 
 
