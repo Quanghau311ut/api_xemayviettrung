@@ -383,17 +383,231 @@ router.delete('/delete/:id_xe', function(req, res) {
     });
 });
 
+// get sản phẩm theo danh mục xe
+router.get('/LayDuLieuXeMayTheoDanhMuc/:id_danh_muc', function(req, res) {
+    var id_danh_muc = req.params.id_danh_muc;
+    var queryXe = 'SELECT * FROM quanlyxemay WHERE id_danh_muc = ?';
+    var queryThongSoKyThuat = 'SELECT * FROM thongsokythuat WHERE id_xe IN (SELECT id_xe FROM quanlyxemay WHERE id_danh_muc = ?)';
+    var queryAnhChiTiet = 'SELECT * FROM anhchitiet WHERE id_xe IN (SELECT id_xe FROM quanlyxemay WHERE id_danh_muc = ?)';
+
+    connection.query(queryXe, id_danh_muc, function(errorXe, resultXe) {
+        if (errorXe) {
+            console.error('Lỗi khi truy vấn sản phẩm (xe):', errorXe);
+            return res.status(500).json({ error: 'Lỗi khi truy vấn sản phẩm (xe)' });
+        }
+
+        if (resultXe.length === 0) {
+            return res.status(404).json({ message: 'Không tìm thấy sản phẩm nào trong danh mục này' });
+        }
+
+        // Lấy thông số kỹ thuật
+        connection.query(queryThongSoKyThuat, id_danh_muc, function(errorThongSoKyThuat, resultThongSoKyThuat) {
+            if (errorThongSoKyThuat) {
+                console.error('Lỗi khi truy vấn thông số kỹ thuật:', errorThongSoKyThuat);
+                return res.status(500).json({ error: 'Lỗi khi truy vấn thông số kỹ thuật' });
+            }
+
+            // Lấy chi tiết ảnh
+            connection.query(queryAnhChiTiet, id_danh_muc, function(errorAnhChiTiet, resultAnhChiTiet) {
+                if (errorAnhChiTiet) {
+                    console.error('Lỗi khi truy vấn chi tiết ảnh:', errorAnhChiTiet);
+                    return res.status(500).json({ error: 'Lỗi khi truy vấn chi tiết ảnh' });
+                }
+
+                // Gửi kết quả về cho client
+                res.json({
+                    xe: resultXe,
+                    thongSoKyThuat: resultThongSoKyThuat,
+                    anhChiTiet: resultAnhChiTiet
+                });
+            });
+        });
+    });
+});
+
+
+//lọc xe máy theo khoảng giá
+
+router.get('/LocSanPhamTheoKhoangGia/:minPrice/:maxPrice', function(req, res) {
+    var minPrice = req.params.minPrice;
+    var maxPrice = req.params.maxPrice;
+
+    var query = `
+        SELECT 
+            qx.id_xe,
+            qx.ten_xe,
+            qx.model,
+            qx.mau_sac,
+            qx.nam_san_xuat,
+            qx.gia,
+            qx.so_luong,
+            qx.anh_dai_dien,
+            ts.dung_tich_xilanh,
+            ts.cong_suat_toi_da,
+            ts.momen_xoan_toi_da,
+            ts.tieu_hao_nhien_lieu,
+            ts.hop_so,
+            ts.trong_luong,
+            ac.duong_dan_anh
+        FROM 
+            quanlyxemay qx
+        JOIN 
+            thongsokythuat ts ON qx.id_xe = ts.id_xe
+        JOIN 
+            anhchitiet ac ON qx.id_xe = ac.id_xe
+        WHERE 
+            qx.gia BETWEEN ? AND ?
+    `;
+
+    connection.query(query, [minPrice, maxPrice], function(error, results) {
+        if (error) {
+            console.error('Lỗi khi lọc sản phẩm theo khoảng giá:', error);
+            return res.status(500).json({ error: 'Lỗi khi lọc sản phẩm theo khoảng giá' });
+        }
+
+        // Kiểm tra nếu không có sản phẩm nào thỏa mãn điều kiện, trả về thông báo
+        if (results.length === 0) {
+            return res.status(404).json({ message: 'Không tìm thấy sản phẩm nào trong khoảng giá này' });
+        }
+
+        // Gửi kết quả về cho client
+        res.json(results);
+    });
+});
+
+
+// sắp xếp giá tăng dần
+router.get('/Sap-Xep-Gia-Tang-Dan', function(req, res) {
+    var query = `
+        SELECT 
+            qx.id_xe,
+            qx.ten_xe,
+            qx.model,
+            qx.mau_sac,
+            qx.nam_san_xuat,
+            qx.gia,
+            qx.so_luong,
+            qx.anh_dai_dien,
+            ts.dung_tich_xilanh,
+            ts.cong_suat_toi_da,
+            ts.momen_xoan_toi_da,
+            ts.tieu_hao_nhien_lieu,
+            ts.hop_so,
+            ts.trong_luong,
+            ac.duong_dan_anh
+        FROM 
+            quanlyxemay qx
+        JOIN 
+            thongsokythuat ts ON qx.id_xe = ts.id_xe
+        JOIN 
+            anhchitiet ac ON qx.id_xe = ac.id_xe
+        ORDER BY 
+            qx.gia ASC
+    `;
+
+    connection.query(query, function(error, results) {
+        if (error) {
+            console.error('Lỗi khi lấy dữ liệu và sắp xếp theo giá bán tăng dần:', error);
+            return res.status(500).json({ error: 'Lỗi khi lấy dữ liệu và sắp xếp theo giá bán tăng dần' });
+        }
+
+        // Kiểm tra nếu không có sản phẩm nào, trả về thông báo
+        if (results.length === 0) {
+            return res.status(404).json({ message: 'Không có sản phẩm nào được tìm thấy' });
+        }
+
+        // Gửi kết quả về cho client
+        res.json(results);
+    });
+});
+
+
+//sắp xếp giá giảm dần
+router.get('/Sap-Xep-Gia-Giam-Dan', function(req, res) {
+    var query = `
+        SELECT 
+            qx.id_xe,
+            qx.ten_xe,
+            qx.model,
+            qx.mau_sac,
+            qx.nam_san_xuat,
+            qx.gia,
+            qx.so_luong,
+            qx.anh_dai_dien,
+            ts.dung_tich_xilanh,
+            ts.cong_suat_toi_da,
+            ts.momen_xoan_toi_da,
+            ts.tieu_hao_nhien_lieu,
+            ts.hop_so,
+            ts.trong_luong,
+            ac.duong_dan_anh
+        FROM 
+            quanlyxemay qx
+        JOIN 
+            thongsokythuat ts ON qx.id_xe = ts.id_xe
+        JOIN 
+            anhchitiet ac ON qx.id_xe = ac.id_xe
+        ORDER BY 
+            qx.gia DESC
+    `;
+
+    connection.query(query, function(error, results) {
+        if (error) {
+            console.error('Lỗi khi lấy dữ liệu và sắp xếp theo giá bán giảm dần:', error);
+            return res.status(500).json({ error: 'Lỗi khi lấy dữ liệu và sắp xếp theo giá bán giảm dần' });
+        }
+
+        // Kiểm tra nếu không có sản phẩm nào, trả về thông báo
+        if (results.length === 0) {
+            return res.status(404).json({ message: 'Không có sản phẩm nào được tìm thấy' });
+        }
+
+        // Gửi kết quả về cho client
+        res.json(results);
+    });
+});
+
 
 
 //search
 router.get('/search', function(req, res) {
     var keyword = req.query.keyword;
-    var query = 'SELECT * FROM quanlyxemay WHERE ten_xe LIKE ? OR model LIKE ? OR mau_sac LIKE ?';
+    var query = `
+        SELECT 
+            qx.id_xe,
+            qx.ten_xe,
+            qx.model,
+            qx.mau_sac,
+            qx.nam_san_xuat,
+            qx.gia,
+            qx.so_luong,
+            qx.anh_dai_dien,
+            ts.dung_tich_xilanh,
+            ts.cong_suat_toi_da,
+            ts.momen_xoan_toi_da,
+            ts.tieu_hao_nhien_lieu,
+            ts.hop_so,
+            ts.trong_luong,
+            ac.duong_dan_anh
+        FROM 
+            quanlyxemay qx
+        JOIN 
+            thongsokythuat ts ON qx.id_xe = ts.id_xe
+        JOIN 
+            anhchitiet ac ON qx.id_xe = ac.id_xe
+        JOIN
+            quanlydanhmucxemay dm ON qx.id_danh_muc = dm.id_danh_muc
+        WHERE 
+            qx.ten_xe LIKE ?
+            OR qx.model LIKE ?
+            OR qx.mau_sac LIKE ?
+            OR dm.ten_danh_muc LIKE ?
+    `;
 
     // Thêm ký tự đại diện '%' vào từ khóa để tìm kiếm các bản ghi có tên chứa từ khóa
     var keywordWithWildcard = '%' + keyword + '%';
 
-    connection.query(query, [keywordWithWildcard, keywordWithWildcard, keywordWithWildcard], function(error, results) {
+    connection.query(query, [keywordWithWildcard, keywordWithWildcard, keywordWithWildcard, keywordWithWildcard], function(error, results) {
         if (error) {
             console.error('Lỗi thao tác với cơ sở dữ liệu:', error);
             res.status(500).send('Lỗi thao tác với cơ sở dữ liệu');
