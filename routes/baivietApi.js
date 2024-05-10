@@ -37,6 +37,29 @@ router.get('/get-one/:id_bai_viet', function(req, res) {
     });
 });
 
+// get dữ liệu bài viết theo danh mục tin
+router.get('/LayDanhSachBaiVietTheoMaDanhMuc/:id_danh_muc_tin', function(req, res) {
+    var id_danh_muc_tin = req.params.id_danh_muc_tin;
+    var query = `
+        SELECT baiviet.*, danhmuc.ten_danh_muc_tin 
+        FROM quanlybaiviet baiviet 
+        JOIN quanlydanhmuctin danhmuc ON baiviet.id_danh_muc_tin = danhmuc.id_danh_muc_tin 
+        WHERE baiviet.id_danh_muc_tin = ?`;
+
+    connection.query(query, id_danh_muc_tin, function(error, result) {
+        if (error) {
+            console.error('Lỗi thao tác với cơ sở dữ liệu:', error);
+            res.status(500).send('Lỗi thao tác với cơ sở dữ liệu');
+        } else {
+            if (result.length === 0) {
+                res.status(404).send('Không tìm thấy bài viết');
+            } else {
+                res.json(result);
+            }
+        }
+    });
+});
+
 
 
 //add
