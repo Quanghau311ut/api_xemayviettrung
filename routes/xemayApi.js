@@ -56,7 +56,7 @@ router.get('/get-all', function(req, res) {
 
 
 //get-one
-router.get('/get-one/:id_xe', function(req, res) {
+router.get('/get-one1/:id_xe', function(req, res) {
     var id_xe = req.params.id_xe;
     var queryXe = 'SELECT * FROM quanlyxemay WHERE id_xe = ?';
     var queryThongSoKyThuat = 'SELECT * FROM thongsokythuat WHERE id_xe = ?';
@@ -96,6 +96,90 @@ router.get('/get-one/:id_xe', function(req, res) {
         }
     });
 });
+// get-one
+router.get('/get-one/:id_xe', function(req, res) {
+    var id_xe = req.params.id_xe;
+    var queryXe = 'SELECT * FROM quanlyxemay WHERE id_xe = ?';
+    var queryThongSoKyThuat = 'SELECT * FROM thongsokythuat WHERE id_xe = ?';
+    var queryAnhChiTiet = 'SELECT * FROM anhchitiet WHERE id_xe = ?';
+    var queryDanhGia = 'SELECT danh_gia, noi_dung_danh_gia, ngay_danh_gia, id_khach_hang FROM quanlydanhgia WHERE id_xe = ?';
+    var queryKhachHang = 'SELECT ten_khach_hang, so_dien_thoai, email, dia_chi, id_khach_hang FROM quanlykhachhang WHERE id_khach_hang IN (SELECT id_khach_hang FROM quanlydanhgia WHERE id_xe = ?)';
+
+    connection.query(queryXe, id_xe, function(errorXe, resultXe) {
+        if (errorXe) {
+            console.error('Lỗi thao tác với cơ sở dữ liệu (xe):', errorXe);
+            res.status(500).send('Lỗi thao tác với cơ sở dữ liệu (xe)');
+        } else {
+            if (resultXe.length === 0) {
+                res.status(404).send('Không tìm thấy xe máy');
+            } else {
+                // Lấy thông số kỹ thuật
+                connection.query(queryThongSoKyThuat, id_xe, function(errorThongSoKyThuat, resultThongSoKyThuat) {
+                    if (errorThongSoKyThuat) {
+                        console.error('Lỗi thao tác với cơ sở dữ liệu (thông số kỹ thuật):', errorThongSoKyThuat);
+                        res.status(500).send('Lỗi thao tác với cơ sở dữ liệu (thông số kỹ thuật)');
+                    } else {
+                        // Lấy chi tiết ảnh
+                        connection.query(queryAnhChiTiet, id_xe, function(errorAnhChiTiet, resultAnhChiTiet) {
+                            if (errorAnhChiTiet) {
+                                console.error('Lỗi thao tác với cơ sở dữ liệu (ảnh chi tiết):', errorAnhChiTiet);
+                                res.status(500).send('Lỗi thao tác với cơ sở dữ liệu (ảnh chi tiết)');
+                            } else {
+                                // Lấy danh sách đánh giá
+                                connection.query(queryDanhGia, id_xe, function(errorDanhGia, resultDanhGia) {
+                                    if (errorDanhGia) {
+                                        console.error('Lỗi thao tác với cơ sở dữ liệu (đánh giá):', errorDanhGia);
+                                        res.status(500).send('Lỗi thao tác với cơ sở dữ liệu (đánh giá)');
+                                    } else {
+                                        // Lấy danh sách khách hàng
+                                        connection.query(queryKhachHang, id_xe, function(errorKhachHang, resultKhachHang) {
+                                            if (errorKhachHang) {
+                                                console.error('Lỗi thao tác với cơ sở dữ liệu (khách hàng):', errorKhachHang);
+                                                res.status(500).send('Lỗi thao tác với cơ sở dữ liệu (khách hàng)');
+                                            } else {
+                                                // Gộp danh sách đánh giá và khách hàng vào nhau
+                                                var danhGiaKhachHang = [];
+                                                resultKhachHang.forEach(function(khachHang) {
+                                                    var khachHangDanhGia = {
+                                                        ten_khach_hang: khachHang.ten_khach_hang,
+                                                        so_dien_thoai: khachHang.so_dien_thoai,
+                                                        email: khachHang.email,
+                                                        dia_chi: khachHang.dia_chi,
+                                                        danhGia: []
+                                                    };
+                                                    resultDanhGia.forEach(function(danhGia) {
+                                                        if (danhGia.id_khach_hang === khachHang.id_khach_hang) {
+                                                            khachHangDanhGia.danhGia.push({
+                                                                danh_gia: danhGia.danh_gia,
+                                                                noi_dung_danh_gia: danhGia.noi_dung_danh_gia,
+                                                                ngay_danh_gia: danhGia.ngay_danh_gia
+                                                            });
+                                                        }
+                                                    });
+                                                    danhGiaKhachHang.push(khachHangDanhGia);
+                                                });
+
+                                                // Gửi kết quả về cho client
+                                                res.json({
+                                                    xe: resultXe[0],
+                                                    thongSoKyThuat: resultThongSoKyThuat,
+                                                    anhChiTiet: resultAnhChiTiet,
+                                                    danhGiaKhachHang: danhGiaKhachHang
+                                                });
+                                            }
+                                        });
+                                    }
+                                });
+                            }
+                        });
+                    }
+                });
+            }
+        }
+    });
+});
+
+
 
 // router.get('/get-one/:id_xe', function(req, res) {
 //     var id_xe = req.params.id_xe;
@@ -386,44 +470,102 @@ router.delete('/delete/:id_xe', function(req, res) {
 // get sản phẩm theo danh mục xe
 router.get('/LayDuLieuXeMayTheoDanhMuc/:id_danh_muc', function(req, res) {
     var id_danh_muc = req.params.id_danh_muc;
-    var queryXe = 'SELECT * FROM quanlyxemay WHERE id_danh_muc = ?';
-    var queryThongSoKyThuat = 'SELECT * FROM thongsokythuat WHERE id_xe IN (SELECT id_xe FROM quanlyxemay WHERE id_danh_muc = ?)';
-    var queryAnhChiTiet = 'SELECT * FROM anhchitiet WHERE id_xe IN (SELECT id_xe FROM quanlyxemay WHERE id_danh_muc = ?)';
+    var queryXe = 'SELECT quanlyxemay.*, thongsokythuat.*, anhchitiet.duong_dan_anh FROM quanlyxemay ' +
+                  'LEFT JOIN thongsokythuat ON quanlyxemay.id_xe = thongsokythuat.id_xe ' +
+                  'LEFT JOIN anhchitiet ON quanlyxemay.id_xe = anhchitiet.id_xe ' +
+                  'WHERE quanlyxemay.id_danh_muc = ?';
 
-    connection.query(queryXe, id_danh_muc, function(errorXe, resultXe) {
-        if (errorXe) {
-            console.error('Lỗi khi truy vấn sản phẩm (xe):', errorXe);
-            return res.status(500).json({ error: 'Lỗi khi truy vấn sản phẩm (xe)' });
+    connection.query(queryXe, id_danh_muc, function(error, results) {
+        if (error) {
+            console.error('Lỗi khi truy vấn dữ liệu xe máy:', error);
+            return res.status(500).json({ error: 'Lỗi khi truy vấn dữ liệu xe máy' });
         }
 
-        if (resultXe.length === 0) {
+        if (results.length === 0) {
             return res.status(404).json({ message: 'Không tìm thấy sản phẩm nào trong danh mục này' });
         }
 
-        // Lấy thông số kỹ thuật
-        connection.query(queryThongSoKyThuat, id_danh_muc, function(errorThongSoKyThuat, resultThongSoKyThuat) {
-            if (errorThongSoKyThuat) {
-                console.error('Lỗi khi truy vấn thông số kỹ thuật:', errorThongSoKyThuat);
-                return res.status(500).json({ error: 'Lỗi khi truy vấn thông số kỹ thuật' });
-            }
+        // Tạo một mảng để lưu trữ dữ liệu sản phẩm theo yêu cầu
+        var responseData = [];
 
-            // Lấy chi tiết ảnh
-            connection.query(queryAnhChiTiet, id_danh_muc, function(errorAnhChiTiet, resultAnhChiTiet) {
-                if (errorAnhChiTiet) {
-                    console.error('Lỗi khi truy vấn chi tiết ảnh:', errorAnhChiTiet);
-                    return res.status(500).json({ error: 'Lỗi khi truy vấn chi tiết ảnh' });
+        // Duyệt qua các kết quả từ câu truy vấn
+        results.forEach(function(result) {
+            // Kiểm tra xem sản phẩm đã tồn tại trong mảng responseData chưa
+            var existingProductIndex = responseData.findIndex(function(product) {
+                return product.xe.id_xe === result.id_xe;
+            });
+
+            // Nếu sản phẩm chưa tồn tại, thêm mới vào mảng responseData
+            if (existingProductIndex === -1) {
+                // Tạo một đối tượng sản phẩm mới
+                var newProduct = {
+                    xe: {
+                        id_xe: result.id_xe,
+                        id_thuong_hieu: result.id_thuong_hieu,
+                        id_danh_muc: result.id_danh_muc,
+                        ten_xe: result.ten_xe,
+                        model: result.model,
+                        mau_sac: result.mau_sac,
+                        nam_san_xuat: result.nam_san_xuat,
+                        gia: result.gia,
+                        so_luong: result.so_luong,
+                        created_at: result.created_at,
+                        updated_at: result.updated_at,
+                        anh_dai_dien: result.anh_dai_dien,
+                        thongSoKyThuat: [] // Khởi tạo mảng để lưu trữ thông số kỹ thuật
+                    },
+                    anhChiTiet: [] // Khởi tạo mảng để lưu trữ hình ảnh chi tiết
+                };
+
+                // Thêm thông số kỹ thuật vào đối tượng tạm thời
+                var thongSoKyThuat = {
+                    id_thong_so_ky_thuat: result.id_thong_so_ky_thuat,
+                    dung_tich_xilanh: result.dung_tich_xilanh,
+                    cong_suat_toi_da: result.cong_suat_toi_da,
+                    momen_xoan_toi_da: result.momen_xoan_toi_da,
+                    tieu_hao_nhien_lieu: result.tieu_hao_nhien_lieu,
+                    hop_so: result.hop_so,
+                    trong_luong: result.trong_luong,
+                    created_at: result.created_at,
+                    updated_at: result.updated_at
+                };
+
+                // Thêm thông số kỹ thuật vào mảng thongSoKyThuat của sản phẩm mới
+                newProduct.xe.thongSoKyThuat.push(thongSoKyThuat);
+
+                // Thêm hình ảnh chi tiết vào mảng anhChiTiet của sản phẩm mới
+                if (result.duong_dan_anh) {
+                    newProduct.anhChiTiet.push({
+                        id_anh_chi_tiet: result.id_anh_chi_tiet,
+                        duong_dan_anh: result.duong_dan_anh,
+                        created_at: result.created_at,
+                        updated_at: result.updated_at
+                    });
                 }
 
-                // Gửi kết quả về cho client
-                res.json({
-                    xe: resultXe,
-                    thongSoKyThuat: resultThongSoKyThuat,
-                    anhChiTiet: resultAnhChiTiet
-                });
-            });
+                // Thêm sản phẩm mới vào mảng responseData
+                responseData.push(newProduct);
+            } else {
+                // Nếu sản phẩm đã tồn tại trong mảng responseData, chỉ cần thêm hình ảnh chi tiết vào sản phẩm đó
+                // Thêm hình ảnh chi tiết vào mảng anhChiTiet của sản phẩm đã tồn tại
+                if (result.duong_dan_anh) {
+                    responseData[existingProductIndex].anhChiTiet.push({
+                        id_anh_chi_tiet: result.id_anh_chi_tiet,
+                        duong_dan_anh: result.duong_dan_anh,
+                        created_at: result.created_at,
+                        updated_at: result.updated_at
+                    });
+                }
+            }
         });
+
+        // Gửi kết quả về cho client
+        res.json(responseData);
     });
 });
+
+
+
 
 
 //lọc xe máy theo khoảng giá
