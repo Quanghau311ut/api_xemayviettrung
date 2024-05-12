@@ -15,6 +15,25 @@ router.get('/get-all', function(req, res) {
         }
     });
 });
+//phân trang
+router.get('/get-page', function(req, res) {
+    const page = parseInt(req.query.page) || 1; // Default to page 1 if not provided
+    const pageSize = parseInt(req.query.pageSize) || 10; // Default page size to 10 if not provided
+
+    const offset = (page - 1) * pageSize;
+
+    const query = `SELECT * FROM quanlybaiviet LIMIT ?, ?`;
+    const values = [offset, pageSize];
+
+    connection.query(query, values, function(error, result) {
+        if (error) {
+            console.error('Lỗi thao tác với cơ sở dữ liệu:', error);
+            res.status(500).send('Lỗi thao tác với cơ sở dữ liệu');
+        } else {
+            res.json(result);
+        }
+    });
+});
 
 
 

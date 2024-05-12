@@ -97,13 +97,94 @@ router.get('/get-one1/:id_xe', function(req, res) {
     });
 });
 // get-one
+// router.get('/get-one1/:id_xe', function(req, res) {
+//     var id_xe = req.params.id_xe;
+//     var queryXe = 'SELECT * FROM quanlyxemay WHERE id_xe = ?';
+//     var queryThongSoKyThuat = 'SELECT * FROM thongsokythuat WHERE id_xe = ?';
+//     var queryAnhChiTiet = 'SELECT * FROM anhchitiet WHERE id_xe = ?';
+//     var queryDanhGia = 'SELECT danh_gia, noi_dung_danh_gia, ngay_danh_gia, id_khach_hang FROM quanlydanhgia WHERE id_xe = ?';
+//     var queryKhachHang = 'SELECT ten_khach_hang, so_dien_thoai, email, dia_chi, id_khach_hang FROM quanlykhachhang WHERE id_khach_hang IN (SELECT id_khach_hang FROM quanlydanhgia WHERE id_xe = ?)';
+
+//     connection.query(queryXe, id_xe, function(errorXe, resultXe) {
+//         if (errorXe) {
+//             console.error('Lỗi thao tác với cơ sở dữ liệu (xe):', errorXe);
+//             res.status(500).send('Lỗi thao tác với cơ sở dữ liệu (xe)');
+//         } else {
+//             if (resultXe.length === 0) {
+//                 res.status(404).send('Không tìm thấy xe máy');
+//             } else {
+//                 // Lấy thông số kỹ thuật
+//                 connection.query(queryThongSoKyThuat, id_xe, function(errorThongSoKyThuat, resultThongSoKyThuat) {
+//                     if (errorThongSoKyThuat) {
+//                         console.error('Lỗi thao tác với cơ sở dữ liệu (thông số kỹ thuật):', errorThongSoKyThuat);
+//                         res.status(500).send('Lỗi thao tác với cơ sở dữ liệu (thông số kỹ thuật)');
+//                     } else {
+//                         // Lấy chi tiết ảnh
+//                         connection.query(queryAnhChiTiet, id_xe, function(errorAnhChiTiet, resultAnhChiTiet) {
+//                             if (errorAnhChiTiet) {
+//                                 console.error('Lỗi thao tác với cơ sở dữ liệu (ảnh chi tiết):', errorAnhChiTiet);
+//                                 res.status(500).send('Lỗi thao tác với cơ sở dữ liệu (ảnh chi tiết)');
+//                             } else {
+//                                 // Lấy danh sách đánh giá
+//                                 connection.query(queryDanhGia, id_xe, function(errorDanhGia, resultDanhGia) {
+//                                     if (errorDanhGia) {
+//                                         console.error('Lỗi thao tác với cơ sở dữ liệu (đánh giá):', errorDanhGia);
+//                                         res.status(500).send('Lỗi thao tác với cơ sở dữ liệu (đánh giá)');
+//                                     } else {
+//                                         // Lấy danh sách khách hàng
+//                                         connection.query(queryKhachHang, id_xe, function(errorKhachHang, resultKhachHang) {
+//                                             if (errorKhachHang) {
+//                                                 console.error('Lỗi thao tác với cơ sở dữ liệu (khách hàng):', errorKhachHang);
+//                                                 res.status(500).send('Lỗi thao tác với cơ sở dữ liệu (khách hàng)');
+//                                             } else {
+//                                                 // Gộp danh sách đánh giá và khách hàng vào nhau
+//                                                 var danhGiaKhachHang = [];
+//                                                 resultKhachHang.forEach(function(khachHang) {
+//                                                     var khachHangDanhGia = {
+//                                                         ten_khach_hang: khachHang.ten_khach_hang,
+//                                                         so_dien_thoai: khachHang.so_dien_thoai,
+//                                                         email: khachHang.email,
+//                                                         dia_chi: khachHang.dia_chi,
+//                                                         danhGia: []
+//                                                     };
+//                                                     resultDanhGia.forEach(function(danhGia) {
+//                                                         if (danhGia.id_khach_hang === khachHang.id_khach_hang) {
+//                                                             khachHangDanhGia.danhGia.push({
+//                                                                 danh_gia: danhGia.danh_gia,
+//                                                                 noi_dung_danh_gia: danhGia.noi_dung_danh_gia,
+//                                                                 ngay_danh_gia: danhGia.ngay_danh_gia
+//                                                             });
+//                                                         }
+//                                                     });
+//                                                     danhGiaKhachHang.push(khachHangDanhGia);
+//                                                 });
+
+//                                                 // Gửi kết quả về cho client
+//                                                 res.json({
+//                                                     xe: resultXe[0],
+//                                                     thongSoKyThuat: resultThongSoKyThuat,
+//                                                     anhChiTiet: resultAnhChiTiet,
+//                                                     danhGiaKhachHang: danhGiaKhachHang
+//                                                 });
+//                                             }
+//                                         });
+//                                     }
+//                                 });
+//                             }
+//                         });
+//                     }
+//                 });
+//             }
+//         }
+        
+//     });
+// });
 router.get('/get-one/:id_xe', function(req, res) {
     var id_xe = req.params.id_xe;
     var queryXe = 'SELECT * FROM quanlyxemay WHERE id_xe = ?';
     var queryThongSoKyThuat = 'SELECT * FROM thongsokythuat WHERE id_xe = ?';
     var queryAnhChiTiet = 'SELECT * FROM anhchitiet WHERE id_xe = ?';
-    var queryDanhGia = 'SELECT danh_gia, noi_dung_danh_gia, ngay_danh_gia, id_khach_hang FROM quanlydanhgia WHERE id_xe = ?';
-    var queryKhachHang = 'SELECT ten_khach_hang, so_dien_thoai, email, dia_chi, id_khach_hang FROM quanlykhachhang WHERE id_khach_hang IN (SELECT id_khach_hang FROM quanlydanhgia WHERE id_xe = ?)';
+    var queryDanhGia = 'SELECT danh_gia, noi_dung_danh_gia, ngay_danh_gia FROM quanlydanhgia WHERE id_xe = ?';
 
     connection.query(queryXe, id_xe, function(errorXe, resultXe) {
         if (errorXe) {
@@ -131,42 +212,12 @@ router.get('/get-one/:id_xe', function(req, res) {
                                         console.error('Lỗi thao tác với cơ sở dữ liệu (đánh giá):', errorDanhGia);
                                         res.status(500).send('Lỗi thao tác với cơ sở dữ liệu (đánh giá)');
                                     } else {
-                                        // Lấy danh sách khách hàng
-                                        connection.query(queryKhachHang, id_xe, function(errorKhachHang, resultKhachHang) {
-                                            if (errorKhachHang) {
-                                                console.error('Lỗi thao tác với cơ sở dữ liệu (khách hàng):', errorKhachHang);
-                                                res.status(500).send('Lỗi thao tác với cơ sở dữ liệu (khách hàng)');
-                                            } else {
-                                                // Gộp danh sách đánh giá và khách hàng vào nhau
-                                                var danhGiaKhachHang = [];
-                                                resultKhachHang.forEach(function(khachHang) {
-                                                    var khachHangDanhGia = {
-                                                        ten_khach_hang: khachHang.ten_khach_hang,
-                                                        so_dien_thoai: khachHang.so_dien_thoai,
-                                                        email: khachHang.email,
-                                                        dia_chi: khachHang.dia_chi,
-                                                        danhGia: []
-                                                    };
-                                                    resultDanhGia.forEach(function(danhGia) {
-                                                        if (danhGia.id_khach_hang === khachHang.id_khach_hang) {
-                                                            khachHangDanhGia.danhGia.push({
-                                                                danh_gia: danhGia.danh_gia,
-                                                                noi_dung_danh_gia: danhGia.noi_dung_danh_gia,
-                                                                ngay_danh_gia: danhGia.ngay_danh_gia
-                                                            });
-                                                        }
-                                                    });
-                                                    danhGiaKhachHang.push(khachHangDanhGia);
-                                                });
-
-                                                // Gửi kết quả về cho client
-                                                res.json({
-                                                    xe: resultXe[0],
-                                                    thongSoKyThuat: resultThongSoKyThuat,
-                                                    anhChiTiet: resultAnhChiTiet,
-                                                    danhGiaKhachHang: danhGiaKhachHang
-                                                });
-                                            }
+                                        // Gửi kết quả về cho client
+                                        res.json({
+                                            xe: resultXe[0],
+                                            thongSoKyThuat: resultThongSoKyThuat,
+                                            anhChiTiet: resultAnhChiTiet,
+                                            danhGia: resultDanhGia
                                         });
                                     }
                                 });
