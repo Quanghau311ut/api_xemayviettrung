@@ -134,15 +134,27 @@ router.post('/edit/:id_bai_viet', function(req, res) {
 //delete    
 router.delete('/delete/:id_bai_viet', function(req, res) {
     var id_bai_viet = req.params.id_bai_viet;
-    var query = 'DELETE FROM quanlybaiviet WHERE id_bai_viet = ?';
 
-    connection.query(query, id_bai_viet, function(error, result) {
+    // Xóa tất cả các bình luận của bài viết
+    var queryDeleteComments = 'DELETE FROM quanlybinhluan WHERE id_bai_viet = ?';
+    connection.query(queryDeleteComments, [id_bai_viet], function(error, resultDeleteComments) {
         if (error) {
-            console.error('Lỗi thao tác với cơ sở dữ liệu:', error);
-            res.status(500).send('Lỗi thao tác với cơ sở dữ liệu');
+            console.error('Lỗi khi xóa bình luận:', error);
+            return res.status(500).send('Lỗi khi xóa bình luận');
         } else {
-            console.log('Xóa thành công bài viết:', result);
-            res.json(result);
+            console.log('Xóa thành công các bình luận:', resultDeleteComments);
+
+            // Tiếp tục xóa bài viết sau khi xóa bình luận
+            var queryDeletePost = 'DELETE FROM quanlybaiviet WHERE id_bai_viet = ?';
+            connection.query(queryDeletePost, [id_bai_viet], function(error, resultDeletePost) {
+                if (error) {
+                    console.error('Lỗi thao tác với cơ sở dữ liệu:', error);
+                    res.status(500).send('Lỗi thao tác với cơ sở dữ liệu');
+                } else {
+                    console.log('Xóa thành công bài viết:', resultDeletePost);
+                    res.json(resultDeletePost);
+                }
+            });
         }
     });
 });

@@ -482,7 +482,7 @@ router.post('/edit/:id_xe', async function(req, res) {
 //delete    
 router.delete('/delete/:id_xe', function(req, res) {
     var id_xe = req.params.id_xe;
-    
+
     // Xóa thông số kỹ thuật của xe
     var queryDeleteThongSoKyThuat = "DELETE FROM thongsokythuat WHERE id_xe = ?";
     connection.query(queryDeleteThongSoKyThuat, [id_xe], function(error, resultDeleteThongSoKyThuat) {
@@ -501,15 +501,26 @@ router.delete('/delete/:id_xe', function(req, res) {
                 } else {
                     console.log('Xóa thành công ảnh chi tiết:', resultDeleteAnhChiTiet);
 
-                    // Xóa xe từ bảng quản lý xe máy
-                    var queryDeleteXe = 'DELETE FROM quanlyxemay WHERE id_xe = ?';
-                    connection.query(queryDeleteXe, id_xe, function(error, resultDeleteXe) {
+                    // Xóa đánh giá của xe
+                    var queryDeleteDanhGia = "DELETE FROM quanlydanhgia WHERE id_xe = ?";
+                    connection.query(queryDeleteDanhGia, [id_xe], function(error, resultDeleteDanhGia) {
                         if (error) {
-                            console.error('Lỗi khi xóa xe:', error);
-                            return res.status(500).send('Lỗi khi xóa xe');
+                            console.error('Lỗi khi xóa đánh giá:', error);
+                            return res.status(500).send('Lỗi khi xóa đánh giá');
                         } else {
-                            console.log('Xóa thành công xe:', resultDeleteXe);
-                            res.json(resultDeleteXe);
+                            console.log('Xóa thành công đánh giá:', resultDeleteDanhGia);
+
+                            // Xóa xe từ bảng quản lý xe máy
+                            var queryDeleteXe = 'DELETE FROM quanlyxemay WHERE id_xe = ?';
+                            connection.query(queryDeleteXe, [id_xe], function(error, resultDeleteXe) {
+                                if (error) {
+                                    console.error('Lỗi khi xóa xe:', error);
+                                    return res.status(500).send('Lỗi khi xóa xe');
+                                } else {
+                                    console.log('Xóa thành công xe:', resultDeleteXe);
+                                    res.json(resultDeleteXe);
+                                }
+                            });
                         }
                     });
                 }
@@ -517,6 +528,7 @@ router.delete('/delete/:id_xe', function(req, res) {
         }
     });
 });
+
 
 // get sản phẩm theo danh mục xe
 router.get('/LayDuLieuXeMayTheoDanhMuc/:id_danh_muc', function(req, res) {
@@ -760,6 +772,102 @@ router.get('/Sap-Xep-Gia-Giam-Dan', function(req, res) {
     });
 });
 
+
+//sắp xếp sản phẩm tăng dần theo mã danh mục
+router.get('/Sap-Xep-Gia-Tang-Dan-Theo_Danh_Muc/:id_danh_muc', function(req, res) {
+    const id_danh_muc = req.params.id_danh_muc;
+    var query = `
+        SELECT 
+            qx.id_xe,
+            qx.ten_xe,
+            qx.model,
+            qx.mau_sac,
+            qx.nam_san_xuat,
+            qx.gia,
+            qx.so_luong,
+            qx.anh_dai_dien,
+            ts.dung_tich_xilanh,
+            ts.cong_suat_toi_da,
+            ts.momen_xoan_toi_da,
+            ts.tieu_hao_nhien_lieu,
+            ts.hop_so,
+            ts.trong_luong,
+            ac.duong_dan_anh
+        FROM 
+            quanlyxemay qx
+        JOIN 
+            thongsokythuat ts ON qx.id_xe = ts.id_xe
+        JOIN 
+            anhchitiet ac ON qx.id_xe = ac.id_xe
+        WHERE
+            qx.id_danh_muc = ?
+        ORDER BY 
+            qx.gia ASC
+    `;
+
+    connection.query(query, [id_danh_muc], function(error, results) {
+        if (error) {
+            console.error('Lỗi khi lấy dữ liệu và sắp xếp theo giá bán tăng dần:', error);
+            return res.status(500).json({ error: 'Lỗi khi lấy dữ liệu và sắp xếp theo giá bán tăng dần' });
+        }
+
+        // Kiểm tra nếu không có sản phẩm nào, trả về thông báo
+        if (results.length === 0) {
+            return res.status(404).json({ message: 'Không có sản phẩm nào được tìm thấy' });
+        }
+
+        // Gửi kết quả về cho client
+        res.json(results);
+    });
+});
+
+//sắp xếp sản phẩm giảm dần theo mã danh mục
+router.get('/Sap-Xep-Gia-Giam-Dan-Theo_Danh_Muc/:id_danh_muc', function(req, res) {
+    const id_danh_muc = req.params.id_danh_muc;
+    var query = `
+        SELECT 
+            qx.id_xe,
+            qx.ten_xe,
+            qx.model,
+            qx.mau_sac,
+            qx.nam_san_xuat,
+            qx.gia,
+            qx.so_luong,
+            qx.anh_dai_dien,
+            ts.dung_tich_xilanh,
+            ts.cong_suat_toi_da,
+            ts.momen_xoan_toi_da,
+            ts.tieu_hao_nhien_lieu,
+            ts.hop_so,
+            ts.trong_luong,
+            ac.duong_dan_anh
+        FROM 
+            quanlyxemay qx
+        JOIN 
+            thongsokythuat ts ON qx.id_xe = ts.id_xe
+        JOIN 
+            anhchitiet ac ON qx.id_xe = ac.id_xe
+        WHERE
+            qx.id_danh_muc = ?
+        ORDER BY 
+            qx.gia DESC
+    `;
+
+    connection.query(query, [id_danh_muc], function(error, results) {
+        if (error) {
+            console.error('Lỗi khi lấy dữ liệu và sắp xếp theo giá bán giảm dần:', error);
+            return res.status(500).json({ error: 'Lỗi khi lấy dữ liệu và sắp xếp theo giá bán giảm dần' });
+        }
+
+        // Kiểm tra nếu không có sản phẩm nào, trả về thông báo
+        if (results.length === 0) {
+            return res.status(404).json({ message: 'Không có sản phẩm nào được tìm thấy' });
+        }
+
+        // Gửi kết quả về cho client
+        res.json(results);
+    });
+});
 
 
 //search
