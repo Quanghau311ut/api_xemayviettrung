@@ -62,6 +62,40 @@ router.get("/get-all", function (req, res) {
         }
     });
 });
+router.get("/get-all-page", function (req, res) {
+    // Lấy thông tin trang hiện tại và kích thước trang từ request
+    const currentPage = req.query.page || 1;
+    const pageSize = req.query.pageSize || 8; // Kích thước trang mặc định là 10
+
+    // Tính chỉ số bắt đầu và kết thúc của dữ liệu cần lấy
+    const startIndex = (currentPage - 1) * pageSize;
+    const endIndex = currentPage * pageSize;
+
+    var query = "SELECT * FROM quanlyxemay LIMIT ?, ?";
+
+    connection.query(query, [startIndex, pageSize], function (error, results) {
+        if (error) {
+            console.error("Lỗi thao tác với cơ sở dữ liệu:", error);
+            res.status(500).send("Lỗi thao tác với cơ sở dữ liệu");
+        } else {
+            // Tính tổng số lượng bản ghi trong bảng quanlyxemay
+            connection.query("SELECT COUNT(*) AS totalRecords FROM quanlyxemay", function (error, countResult) {
+                if (error) {
+                    console.error("Lỗi thao tác với cơ sở dữ liệu:", error);
+                    res.status(500).send("Lỗi thao tác với cơ sở dữ liệu");
+                } else {
+                    const totalRecords = countResult[0].totalRecords;
+                    const totalPages = Math.ceil(totalRecords / pageSize);
+
+                    // Gửi kết quả về client
+                    res.json({ data: results, totalRecords, totalPages });
+                }
+            });
+        }
+    });
+});
+
+
 
 //get-one
 router.get("/get-one1/:id_xe", function (req, res) {
@@ -123,88 +157,7 @@ router.get("/get-one1/:id_xe", function (req, res) {
     });
 });
 // get-one
-// router.get('/get-one1/:id_xe', function(req, res) {
-//     var id_xe = req.params.id_xe;
-//     var queryXe = 'SELECT * FROM quanlyxemay WHERE id_xe = ?';
-//     var queryThongSoKyThuat = 'SELECT * FROM thongsokythuat WHERE id_xe = ?';
-//     var queryAnhChiTiet = 'SELECT * FROM anhchitiet WHERE id_xe = ?';
-//     var queryDanhGia = 'SELECT danh_gia, noi_dung_danh_gia, ngay_danh_gia, id_khach_hang FROM quanlydanhgia WHERE id_xe = ?';
-//     var queryKhachHang = 'SELECT ten_khach_hang, so_dien_thoai, email, dia_chi, id_khach_hang FROM quanlykhachhang WHERE id_khach_hang IN (SELECT id_khach_hang FROM quanlydanhgia WHERE id_xe = ?)';
 
-//     connection.query(queryXe, id_xe, function(errorXe, resultXe) {
-//         if (errorXe) {
-//             console.error('Lỗi thao tác với cơ sở dữ liệu (xe):', errorXe);
-//             res.status(500).send('Lỗi thao tác với cơ sở dữ liệu (xe)');
-//         } else {
-//             if (resultXe.length === 0) {
-//                 res.status(404).send('Không tìm thấy xe máy');
-//             } else {
-//                 // Lấy thông số kỹ thuật
-//                 connection.query(queryThongSoKyThuat, id_xe, function(errorThongSoKyThuat, resultThongSoKyThuat) {
-//                     if (errorThongSoKyThuat) {
-//                         console.error('Lỗi thao tác với cơ sở dữ liệu (thông số kỹ thuật):', errorThongSoKyThuat);
-//                         res.status(500).send('Lỗi thao tác với cơ sở dữ liệu (thông số kỹ thuật)');
-//                     } else {
-//                         // Lấy chi tiết ảnh
-//                         connection.query(queryAnhChiTiet, id_xe, function(errorAnhChiTiet, resultAnhChiTiet) {
-//                             if (errorAnhChiTiet) {
-//                                 console.error('Lỗi thao tác với cơ sở dữ liệu (ảnh chi tiết):', errorAnhChiTiet);
-//                                 res.status(500).send('Lỗi thao tác với cơ sở dữ liệu (ảnh chi tiết)');
-//                             } else {
-//                                 // Lấy danh sách đánh giá
-//                                 connection.query(queryDanhGia, id_xe, function(errorDanhGia, resultDanhGia) {
-//                                     if (errorDanhGia) {
-//                                         console.error('Lỗi thao tác với cơ sở dữ liệu (đánh giá):', errorDanhGia);
-//                                         res.status(500).send('Lỗi thao tác với cơ sở dữ liệu (đánh giá)');
-//                                     } else {
-//                                         // Lấy danh sách khách hàng
-//                                         connection.query(queryKhachHang, id_xe, function(errorKhachHang, resultKhachHang) {
-//                                             if (errorKhachHang) {
-//                                                 console.error('Lỗi thao tác với cơ sở dữ liệu (khách hàng):', errorKhachHang);
-//                                                 res.status(500).send('Lỗi thao tác với cơ sở dữ liệu (khách hàng)');
-//                                             } else {
-//                                                 // Gộp danh sách đánh giá và khách hàng vào nhau
-//                                                 var danhGiaKhachHang = [];
-//                                                 resultKhachHang.forEach(function(khachHang) {
-//                                                     var khachHangDanhGia = {
-//                                                         ten_khach_hang: khachHang.ten_khach_hang,
-//                                                         so_dien_thoai: khachHang.so_dien_thoai,
-//                                                         email: khachHang.email,
-//                                                         dia_chi: khachHang.dia_chi,
-//                                                         danhGia: []
-//                                                     };
-//                                                     resultDanhGia.forEach(function(danhGia) {
-//                                                         if (danhGia.id_khach_hang === khachHang.id_khach_hang) {
-//                                                             khachHangDanhGia.danhGia.push({
-//                                                                 danh_gia: danhGia.danh_gia,
-//                                                                 noi_dung_danh_gia: danhGia.noi_dung_danh_gia,
-//                                                                 ngay_danh_gia: danhGia.ngay_danh_gia
-//                                                             });
-//                                                         }
-//                                                     });
-//                                                     danhGiaKhachHang.push(khachHangDanhGia);
-//                                                 });
-
-//                                                 // Gửi kết quả về cho client
-//                                                 res.json({
-//                                                     xe: resultXe[0],
-//                                                     thongSoKyThuat: resultThongSoKyThuat,
-//                                                     anhChiTiet: resultAnhChiTiet,
-//                                                     danhGiaKhachHang: danhGiaKhachHang
-//                                                 });
-//                                             }
-//                                         });
-//                                     }
-//                                 });
-//                             }
-//                         });
-//                     }
-//                 });
-//             }
-//         }
-
-//     });
-// });
 router.get("/get-one/:id_xe", function (req, res) {
     var id_xe = req.params.id_xe;
     var queryXe = "SELECT * FROM quanlyxemay WHERE id_xe = ?";
@@ -1140,9 +1093,9 @@ router.get("/san-pham-moi", function (req, res) {
 });
 
 
-//sản phẩm khuyến mại
+//sản phẩm khuyến mại- tăng dân
 router.get('/san-pham-khuyen-mai', function(req, res) {
-    var query = 'SELECT * FROM quanlyxemay WHERE khuyen_mai IS NOT NULL ORDER BY khuyen_mai DESC';
+    var query = 'SELECT * FROM quanlyxemay WHERE khuyen_mai IS NOT NULL ORDER BY khuyen_mai ASC';
 
     connection.query(query, function(error, results) {
         if (error) {
@@ -1153,5 +1106,6 @@ router.get('/san-pham-khuyen-mai', function(req, res) {
         }
     });
 });
+
 
 module.exports = router;
