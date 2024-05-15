@@ -62,42 +62,48 @@ router.get("/get-all", function (req, res) {
         }
     });
 });
+
+
+//get-one
+
 router.get("/get-all-page", function (req, res) {
     // Lấy thông tin trang hiện tại và kích thước trang từ request
-    const currentPage = req.query.page || 1;
-    const pageSize = req.query.pageSize || 8; // Kích thước trang mặc định là 10
+    const currentPage = parseInt(req.query.page, 10) || 1;
+    const pageSize = parseInt(req.query.pageSize, 10) || 8; // Kích thước trang mặc định là 8
 
-    // Tính chỉ số bắt đầu và kết thúc của dữ liệu cần lấy
-    const startIndex = (currentPage - 1) * pageSize;
-    const endIndex = currentPage * pageSize;
+    if (currentPage < 1 || pageSize < 1) {
+        return res.status(400).json({ message: "Số trang hoặc kích thước trang không hợp lệ." });
+    }
 
-    var query = "SELECT * FROM quanlyxemay LIMIT ?, ?";
+    // Tính chỉ số bắt đầu của dữ liệu cần lấy
+    const offset = (currentPage - 1) * pageSize;
 
-    connection.query(query, [startIndex, pageSize], function (error, results) {
+    const query = "SELECT * FROM quanlyxemay LIMIT ?, ?";
+
+    connection.query(query, [offset, pageSize], function (error, results) {
         if (error) {
             console.error("Lỗi thao tác với cơ sở dữ liệu:", error);
-            res.status(500).send("Lỗi thao tác với cơ sở dữ liệu");
-        } else {
-            // Tính tổng số lượng bản ghi trong bảng quanlyxemay
-            connection.query("SELECT COUNT(*) AS totalRecords FROM quanlyxemay", function (error, countResult) {
-                if (error) {
-                    console.error("Lỗi thao tác với cơ sở dữ liệu:", error);
-                    res.status(500).send("Lỗi thao tác với cơ sở dữ liệu");
-                } else {
-                    const totalRecords = countResult[0].totalRecords;
-                    const totalPages = Math.ceil(totalRecords / pageSize);
-
-                    // Gửi kết quả về client
-                    res.json({ data: results, totalRecords, totalPages });
-                }
-            });
+            return res.status(500).send("Lỗi thao tác với cơ sở dữ liệu");
         }
+
+        // Tính tổng số lượng bản ghi trong bảng quanlyxemay
+        connection.query("SELECT COUNT(*) AS totalRecords FROM quanlyxemay", function (error, countResult) {
+            if (error) {
+                console.error("Lỗi thao tác với cơ sở dữ liệu:", error);
+                return res.status(500).send("Lỗi thao tác với cơ sở dữ liệu");
+            }
+
+            const totalRecords = countResult[0].totalRecords;
+            const totalPages = Math.ceil(totalRecords / pageSize);
+
+            // Gửi kết quả về client
+            res.json({ data: results, totalRecords, totalPages });
+        });
     });
 });
 
 
 
-//get-one
 router.get("/get-one1/:id_xe", function (req, res) {
     var id_xe = req.params.id_xe;
     var queryXe = "SELECT * FROM quanlyxemay WHERE id_xe = ?";
