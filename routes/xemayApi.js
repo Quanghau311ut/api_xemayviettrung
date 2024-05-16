@@ -1084,9 +1084,27 @@ router.get("/search", function (req, res) {
 });
 
 //sản phẩm mới- lấy 8 bản ghi
+// router.get("/san-pham-moi", function (req, res) {
+//     var query =
+//         "SELECT * FROM quanlyxemay ORDER BY ABS(TIMESTAMPDIFF(SECOND, created_at, NOW())) LIMIT 8";
+
+//     connection.query(query, function (error, results) {
+//         if (error) {
+//             console.error("Lỗi thao tác với cơ sở dữ liệu:", error);
+//             res.status(500).send("Lỗi thao tác với cơ sở dữ liệu");
+//         } else {
+//             res.json(results);
+//         }
+//     });
+// });
 router.get("/san-pham-moi", function (req, res) {
-    var query =
-        "SELECT * FROM quanlyxemay ORDER BY ABS(TIMESTAMPDIFF(SECOND, created_at, NOW())) LIMIT 8";
+    const page = parseInt(req.query.page) || 1; // Trang hiện tại, mặc định là trang 1 nếu không có
+    const pageSize = parseInt(req.query.pageSize) || 8; // Số lượng sản phẩm trên mỗi trang, mặc định là 8 nếu không có
+
+    const offset = (page - 1) * pageSize;
+
+    var query = `SELECT * FROM quanlyxemay ORDER BY created_at DESC`;
+    // Loại bỏ phần LIMIT từ truy vấn SQL
 
     connection.query(query, function (error, results) {
         if (error) {
@@ -1101,17 +1119,34 @@ router.get("/san-pham-moi", function (req, res) {
 
 //sản phẩm khuyến mại- tăng dân
 router.get('/san-pham-khuyen-mai', function(req, res) {
-    var query = 'SELECT * FROM quanlyxemay WHERE khuyen_mai IS NOT NULL ORDER BY khuyen_mai ASC';
+    const page = parseInt(req.query.page) || 1; // Default to page 1 if not provided
+    const pageSize = parseInt(req.query.pageSize) || 8; // Default page size to 10 if not provided
 
-    connection.query(query, function(error, results) {
+    const offset = (page - 1) * pageSize;
+
+    var query = 'SELECT * FROM quanlyxemay WHERE khuyen_mai IS NOT NULL ORDER BY khuyen_mai ASC';
+    query += ' LIMIT ?, ?'; // Add pagination
+
+    connection.query(query, [offset, pageSize], function(error, results) {
         if (error) {
             console.error('Lỗi thao tác với cơ sở dữ liệu:', error);
             res.status(500).send('Lỗi thao tác với cơ sở dữ liệu');
         } else {
-            res.json(results);
+            // You might also want to get the total count of records for pagination
+            connection.query('SELECT COUNT(*) AS totalRecords FROM quanlyxemay WHERE khuyen_mai IS NOT NULL', function(err, countResult) {
+                if (err) {
+                    console.error('Lỗi thao tác với cơ sở dữ liệu:', err);
+                    res.status(500).send('Lỗi thao tác với cơ sở dữ liệu');
+                } else {
+                    const totalRecords = countResult[0].totalRecords;
+                    const totalPages = Math.ceil(totalRecords / pageSize);
+
+                    // Return paginated data along with total records and total pages count
+                    res.json({ data: results, totalRecords, totalPages });
+                }
+            });
         }
     });
 });
-
 
 module.exports = router;
