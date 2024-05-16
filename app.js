@@ -33,6 +33,7 @@ var routerBaiviet=require('./routes/baivietApi');
 var routerDathang= require('./routes/dathang');
 var routerHoaDonXuat= require('./routes/hoadonxuatApi');
 var routerDanhGia= require('./routes/danhgiaApi');
+var routerSentMail=require('./routes/sentMail');
 
 
 var routerHoaDonNhap =require('./routes/hoadonnhapAPI');
@@ -86,6 +87,7 @@ app.use("/hoa-don-xuat",routerHoaDonXuat);
 app.use("/don-hang",routerDathang);
 app.use("/upload", uploadfileAPI);
 app.use("/danh-gia",routerDanhGia);
+app.use("/mail",routerSentMail);
 
 
 app.use("/public/uploads/", express.static("public/uploads/"))
