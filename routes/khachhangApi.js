@@ -1,6 +1,10 @@
 var express = require('express');
 var router = express.Router();
 var connection = require('../service/dataconnect');
+var bodyParser = require('body-parser');
+
+// Middleware để phân tích cú pháp JSON
+router.use(bodyParser.json());
 
 //getall
 router.get('/get-all', function(req, res) {
@@ -15,7 +19,6 @@ router.get('/get-all', function(req, res) {
         }
     });
 });
-
 
 //get-one
 router.get('/get-one/:id_khach_hang', function(req, res) {
@@ -35,7 +38,6 @@ router.get('/get-one/:id_khach_hang', function(req, res) {
         }
     });
 });
-
 
 //add
 router.post('/add', function(req, res) {
@@ -83,7 +85,6 @@ router.post('/edit/:id_khach_hang', function(req, res) {
     });
 });
 
-
 //delete    
 router.delete('/delete/:id_khach_hang', function(req, res) {
     var id_khach_hang = req.params.id_khach_hang;
@@ -99,7 +100,6 @@ router.delete('/delete/:id_khach_hang', function(req, res) {
         }
     });
 });
-
 
 //search
 router.get('/search', function(req, res) {
@@ -121,9 +121,31 @@ router.get('/search', function(req, res) {
     });
 });
 
+//login
+router.post('/login', function(req, res) {
+    var email = req.body.email;
+    var password = req.body.password;
 
+    if (!email || !password) {
+        return res.status(400).send('Email và mật khẩu là bắt buộc');
+    }
 
+    var query = 'SELECT * FROM quanlykhachhang WHERE email = ? AND matkhau = ?';
+    var values = [email, password];
 
+    connection.query(query, values, function(error, results) {
+        if (error) {
+            console.error('Lỗi thao tác với cơ sở dữ liệu:', error);
+            return res.status(500).json({ message: 'Lỗi thao tác với cơ sở dữ liệu' });
+        }
+
+        if (results.length === 0) {
+            return res.status(401).json({ message: 'Email hoặc mật khẩu không hợp lệ' });
+        }
+
+        res.json(results[0]);
+    });
+});
 
 
 module.exports = router;
