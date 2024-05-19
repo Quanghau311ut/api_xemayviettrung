@@ -87,11 +87,69 @@ router.get('/get-one/:id_don_hang', function(req, res) {
 const moment = require('moment');
 
 // Add an Order
-// Add an Order
+// router.post('/add', function(req, res) {
+//     // Validate request body
+//     if (!req.body || !req.body.id_khach_hang || !req.body.chi_tiet_don_hang) {
+//         return res.status(400).send('Yêu cầu thiếu thông tin');
+//     }
+
+//     // Calculate total price of the order
+//     var totalOrderPrice = 0;
+//     req.body.chi_tiet_don_hang.forEach(function(detail) {
+//         totalOrderPrice += detail.so_luong * detail.gia_ban;
+//     });
+
+//     // Create the order object
+//     var orderData = {
+//         id_khach_hang: req.body.id_khach_hang,
+//         ngay_dat: moment().format('YYYY-MM-DD'), // Current date
+//         tong_gia: totalOrderPrice,
+//         trang_thai: 1 // Default status: Đang chờ xác nhận
+//     };
+
+//     // Insert the order into the database
+//     connection.query('INSERT INTO quanlydonhang SET ?', orderData, function(error, result) {
+//         if (error) {
+//             console.error('Lỗi thêm đơn hàng:', error);
+//             return res.status(500).send('Lỗi thêm đơn hàng');
+//         }
+
+//         // Insert order details
+//         var orderID = result.insertId;
+//         var orderDetails = req.body.chi_tiet_don_hang.map(function(detail) {
+//             return [
+//                 orderID,
+//                 detail.id_xe,
+//                 detail.so_luong,
+//                 detail.gia_ban,
+//                 detail.so_luong * detail.gia_ban // Calculate total price of order detail
+//             ];
+//         });
+//         connection.query('INSERT INTO chitietdonhang (id_don_hang, id_xe, so_luong, gia_ban, tong_gia) VALUES ?', [orderDetails], function(error, result) {
+//             if (error) {
+//                 console.error('Lỗi thêm chi tiết đơn hàng:', error);
+//                 return res.status(500).send('Lỗi thêm chi tiết đơn hàng');
+//             }
+
+//             res.json({ message: 'Đã thêm đơn hàng và chi tiết đơn hàng thành công' });
+//         });
+//     });
+// });
+
 router.post('/add', function(req, res) {
+    // Log the request body
+    console.log('Request body:', req.body);
+
     // Validate request body
-    if (!req.body || !req.body.id_khach_hang || !req.body.chi_tiet_don_hang) {
-        return res.status(400).send('Yêu cầu thiếu thông tin');
+    if (!req.body || !req.body.id_khach_hang || !req.body.chi_tiet_don_hang || !req.body.hinh_thuc_thanh_toan) {
+        console.log('Yêu cầu thiếu thông tin hoặc hình thức thanh toán');
+        return res.status(400).send('Yêu cầu thiếu thông tin hoặc hình thức thanh toán');
+    }
+
+    // Check if hinh_thuc_thanh_toan is provided
+    if (!req.body.hinh_thuc_thanh_toan) {
+        console.log('Yêu cầu thiếu thông tin về hình thức thanh toán');
+        return res.status(400).send('Yêu cầu thiếu thông tin về hình thức thanh toán');
     }
 
     // Calculate total price of the order
@@ -103,10 +161,14 @@ router.post('/add', function(req, res) {
     // Create the order object
     var orderData = {
         id_khach_hang: req.body.id_khach_hang,
-        ngay_dat: moment().format('YYYY-MM-DD'), // Current date
+        ngay_dat: moment().format('YYYY-MM-DD'), // Ngày hiện tại
         tong_gia: totalOrderPrice,
-        trang_thai: 1 // Default status: Đang chờ xác nhận
+        trang_thai: 1, // Trạng thái mặc định: Đang chờ xác nhận
+        hinh_thuc_thanh_toan: req.body.hinh_thuc_thanh_toan // Phương thức thanh toán
     };
+
+    // Log the order data
+    console.log('Order data:', orderData);
 
     // Insert the order into the database
     connection.query('INSERT INTO quanlydonhang SET ?', orderData, function(error, result) {
@@ -123,9 +185,13 @@ router.post('/add', function(req, res) {
                 detail.id_xe,
                 detail.so_luong,
                 detail.gia_ban,
-                detail.so_luong * detail.gia_ban // Calculate total price of order detail
+                detail.so_luong * detail.gia_ban // Tính tổng giá của chi tiết đơn hàng
             ];
         });
+
+        // Log the order details
+        console.log('Order details:', orderDetails);
+
         connection.query('INSERT INTO chitietdonhang (id_don_hang, id_xe, so_luong, gia_ban, tong_gia) VALUES ?', [orderDetails], function(error, result) {
             if (error) {
                 console.error('Lỗi thêm chi tiết đơn hàng:', error);
@@ -136,6 +202,8 @@ router.post('/add', function(req, res) {
         });
     });
 });
+
+
 
 //cập nhật trạng thái Đơn hàng
 router.post('/tinh-trang/:id', (req, res) => {
