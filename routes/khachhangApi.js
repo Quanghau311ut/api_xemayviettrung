@@ -102,14 +102,33 @@ router.delete('/delete/:id_khach_hang', function(req, res) {
 });
 
 //search
+// router.get('/search', function(req, res) {
+//     const keyword = req.query.keyword;
+//     if (!keyword) {
+//         return res.status(400).send('Yêu cầu thiếu từ khóa tìm kiếm');
+//     }
+
+//     var query = 'SELECT * FROM quanlykhachhang WHERE ten_khach_hang LIKE ? OR so_dien_thoai LIKE ?';
+//     var values = [`%${keyword}%`, `%${keyword}%`];
+
+//     connection.query(query, values, function(error, results) {
+//         if (error) {
+//             console.error('Lỗi thao tác với cơ sở dữ liệu:', error);
+//             res.status(500).send('Lỗi thao tác với cơ sở dữ liệu');
+//         } else {
+//             res.json(results);
+//         }
+//     });
+// });
+//search
 router.get('/search', function(req, res) {
-    const keyword = req.query.keyword;
-    if (!keyword) {
-        return res.status(400).send('Yêu cầu thiếu từ khóa tìm kiếm');
+    const email = req.query.email;
+    if (!email) {
+        return res.status(400).send('Yêu cầu thiếu email để tìm kiếm');
     }
 
-    var query = 'SELECT * FROM quanlykhachhang WHERE ten_khach_hang LIKE ? OR so_dien_thoai LIKE ?';
-    var values = [`%${keyword}%`, `%${keyword}%`];
+    var query = 'SELECT * FROM quanlykhachhang WHERE email = ?';
+    var values = [email];
 
     connection.query(query, values, function(error, results) {
         if (error) {
@@ -120,6 +139,7 @@ router.get('/search', function(req, res) {
         }
     });
 });
+
 
 //login
 router.post('/login', function(req, res) {
@@ -147,5 +167,50 @@ router.post('/login', function(req, res) {
     });
 });
 
+//lấy danh sách đơn hàng theo id_khach_hang
+router.get('/danh-sach-don-hang/:id_khach_hang', (req, res) => {
+    const id_khach_hang = req.params.id_khach_hang;
+
+    // Câu truy vấn SQL
+    const query = `
+    SELECT 
+    dh.id_don_hang, 
+    dh.ngay_dat, 
+    dh.tong_gia, 
+    dh.trang_thai, 
+    ctdh.id_chi_tiet_don_hang, 
+    ctdh.id_xe, 
+    ctdh.so_luong, 
+    ctdh.gia_ban, 
+    ctdh.tong_gia AS tong_gia_ctdh,
+    xe.ten_xe,
+    xe.model,
+    xe.mau_sac,
+    xe.nam_san_xuat,
+    xe.gia AS gia_xe,
+    xe.anh_dai_dien,
+    xe.khuyen_mai
+FROM 
+    quanlydonhang dh
+INNER JOIN 
+    chitietdonhang ctdh ON dh.id_don_hang = ctdh.id_don_hang
+INNER JOIN 
+    quanlyxemay xe ON ctdh.id_xe = xe.id_xe
+WHERE 
+    dh.id_khach_hang = ?
+`;
+
+    // Thực hiện truy vấn
+    connection.query(query, id_khach_hang, (error, results, fields) => {
+      if (error) {
+        console.error('Lỗi truy vấn:', error);
+        res.status(500).send('Đã xảy ra lỗi khi truy vấn cơ sở dữ liệu');
+        return;
+      }
+
+      // Trả về kết quả dưới dạng JSON
+      res.json(results);
+    });
+});
 
 module.exports = router;

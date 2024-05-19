@@ -132,64 +132,83 @@ router.post('/add', function(req, res) {
                 return res.status(500).send('Lỗi thêm chi tiết đơn hàng');
             }
 
-            res.json({ message: 'Đã thêm đơn hàng và chi tiết đơn hàng thành công' });
+            res.json({ message: 'ĐÃ THÊM ĐƠN HÀNG THÀNH CÔNG' });
         });
     });
 });
 
-
-//cập nhật trạng thái đơn hàng
-router.post('/trang-thai-don-hang/:id_don_hang', function(req, res) {
-    var orderId = req.params.id_don_hang;
-    var newStatus = req.body.trang_thai;
+//cập nhật trạng thái Đơn hàng
+router.post('/tinh-trang/:id', (req, res) => {
+    const orderId = req.params.id;
+    const newStatus = req.body.trang_thai;
 
     // Xác minh thông tin yêu cầu
     if (!newStatus) {
         return res.status(400).send('Thiếu thông tin trạng thái mới');
     }
 
-    // Bắt đầu transaction
-    connection.beginTransaction(function(err) {
-        if (err) { 
-            console.error('Lỗi bắt đầu transaction:', err);
-            return res.status(500).send('Lỗi bắt đầu transaction');
+    // Cập nhật trạng thái của đơn hàng trong cơ sở dữ liệu
+    connection.query('UPDATE quanlydonhang SET trang_thai = ? WHERE id_don_hang = ?', [newStatus, orderId], (error, result) => {
+        if (error) {
+            console.error('Lỗi cập nhật trạng thái đơn hàng:', error);
+            return res.status(500).send('Lỗi cập nhật trạng thái đơn hàng');
         }
 
-        // Cập nhật trạng thái của đơn hàng
-        connection.query('UPDATE quanlydonhang SET trang_thai = ? WHERE id_don_hang = ?', [newStatus, orderId], function(error, result) {
-            if (error) {
-                return connection.rollback(function() {
-                    console.error('Lỗi cập nhật trạng thái đơn hàng:', error);
-                    res.status(500).send('Lỗi cập nhật trạng thái đơn hàng');
-                });
-            }
-
-            // Thêm dữ liệu vào bảng trangthaidonhang
-            connection.query('INSERT INTO trangthaidonhang (id_don_hang, ten_trang_thai) VALUES (?, ?)', [orderId, newStatus], function(error, result) {
-                if (error) {
-                    return connection.rollback(function() {
-                        console.error('Lỗi thêm trạng thái đơn hàng:', error);
-                        res.status(500).send('Lỗi thêm trạng thái đơn hàng');
-                    });
-                }
-
-                // Commit transaction
-                connection.commit(function(err) {
-                    if (err) { 
-                        return connection.rollback(function() {
-                            console.error('Lỗi commit transaction:', err);
-                            res.status(500).send('Lỗi commit transaction');
-                        });
-                    }
-
-                    // Trả về kết quả
-                    res.json({ message: 'Đã cập nhật trạng thái đơn hàng thành công' });
-                });
-            });
-        });
+        // Trả về kết quả thành công
+        res.json({ message: 'Đã cập nhật trạng thái đơn hàng thành công' });
     });
 });
+// //cập nhật trạng thái đơn hàng
+// router.post('/trang-thai-don-hang/:id_don_hang', function(req, res) {
+//     var orderId = req.params.id_don_hang;
+//     var newStatus = req.body.trang_thai;
 
+//     // Xác minh thông tin yêu cầu
+//     if (!newStatus) {
+//         return res.status(400).send('Thiếu thông tin trạng thái mới');
+//     }
+
+//     // Bắt đầu transaction
+//     connection.beginTransaction(function(err) {
+//         if (err) { 
+//             console.error('Lỗi bắt đầu transaction:', err);
+//             return res.status(500).send('Lỗi bắt đầu transaction');
+//         }
+
+//         // Cập nhật trạng thái của đơn hàng
+//         connection.query('UPDATE quanlydonhang SET trang_thai = ? WHERE id_don_hang = ?', [newStatus, orderId], function(error, result) {
+//             if (error) {
+//                 return connection.rollback(function() {
+//                     console.error('Lỗi cập nhật trạng thái đơn hàng:', error);
+//                     res.status(500).send('Lỗi cập nhật trạng thái đơn hàng');
+//                 });
+//             }
+
+//             // Thêm dữ liệu vào bảng trangthaidonhang
+//             connection.query('INSERT INTO trangthaidonhang (id_don_hang, ten_trang_thai) VALUES (?, ?)', [orderId, newStatus], function(error, result) {
+//                 if (error) {
+//                     return connection.rollback(function() {
+//                         console.error('Lỗi thêm trạng thái đơn hàng:', error);
+//                         res.status(500).send('Lỗi thêm trạng thái đơn hàng');
+//                     });
+//                 }
+
+//                 // Commit transaction
+//                 connection.commit(function(err) {
+//                     if (err) { 
+//                         return connection.rollback(function() {
+//                             console.error('Lỗi commit transaction:', err);
+//                             res.status(500).send('Lỗi commit transaction');
+//                         });
+//                     }
+
+//                     // Trả về kết quả
+//                     res.json({ message: 'Đã cập nhật trạng thái đơn hàng thành công' });
+//                 });
+//             });
+//         });
+//     });
+// });
 
 
 
@@ -254,6 +273,21 @@ router.delete('/delete/:id_don_hang', function(req, res) {
                 });
             });
         });
+    });
+});
+
+
+//lấy danh sách trạng thái đơn hàng
+router.get('/get-all-trang-thai', function(req, res) {
+    var query = 'SELECT * FROM trangthaidonhang';
+
+    connection.query(query, function(error, results) {
+        if (error) {
+            console.error('Lỗi thao tác với cơ sở dữ liệu:', error);
+            res.status(500).send('Lỗi thao tác với cơ sở dữ liệu');
+        } else {
+            res.json(results);
+        }
     });
 });
 

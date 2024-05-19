@@ -69,9 +69,21 @@ router.get('/get-one/:id_hoa_don_xuat', function(req, res) {
 
 
 //add
+// app.js (Express route)
+
 router.post('/add', function(req, res) {
+    console.log('Received request:', JSON.stringify(req.body, null, 2));
+
     var hoaDonXuat = req.body.hoaDonXuat; // Thông tin của hóa đơn xuất
     var chiTietHoaDonXuat = req.body.chiTietHoaDonXuat; // Thông tin chi tiết của hóa đơn xuất
+
+    console.log('hoaDonXuat:', hoaDonXuat);
+    console.log('chiTietHoaDonXuat:', chiTietHoaDonXuat);
+
+    if (!hoaDonXuat || !chiTietHoaDonXuat || !Array.isArray(chiTietHoaDonXuat) || chiTietHoaDonXuat.length === 0) {
+        console.error('Invalid data:', hoaDonXuat, chiTietHoaDonXuat);
+        return res.status(400).json({ message: 'Dữ liệu không hợp lệ' });
+    }
 
     // Tính tổng giá từ các chi tiết hóa đơn xuất
     var tongGia = chiTietHoaDonXuat.reduce(function(total, chiTiet) {
@@ -80,47 +92,52 @@ router.post('/add', function(req, res) {
 
     // Gán tổng giá cho trường tong_gia của hóa đơn xuất
     hoaDonXuat.tong_gia = tongGia;
+    console.log('Tổng giá đã tính:', tongGia);
 
     connection.beginTransaction(function(err) {
         if (err) {
             console.error('Lỗi khởi tạo giao dịch:', err);
-            res.status(500).send('Lỗi khởi tạo giao dịch');
-            return;
+            return res.status(500).json({ message: 'Lỗi khởi tạo giao dịch' });
         }
 
         // Thêm hóa đơn xuất
         connection.query('INSERT INTO quanlyhoadonxuat SET ?', hoaDonXuat, function(error, result) {
             if (error) {
-                connection.rollback(function() {
-                    console.error('Lỗi khi thêm hóa đơn xuất:', error);
-                    res.status(500).send('Lỗi khi thêm hóa đơn xuất');
+                console.error('Lỗi khi thêm hóa đơn xuất:', error);
+                return connection.rollback(function() {
+                    res.status(500).json({ message: 'Lỗi khi thêm hóa đơn xuất' });
                 });
-                return;
             }
 
             var hoaDonXuatId = result.insertId;
+            console.log('Thêm hóa đơn xuất thành công, ID:', hoaDonXuatId);
 
             // Thêm thông tin chi tiết của hóa đơn xuất
             var chiTietValues = chiTietHoaDonXuat.map(function(chiTiet) {
                 return [hoaDonXuatId, chiTiet.id_xe, chiTiet.so_luong, chiTiet.gia_ban, chiTiet.so_luong * chiTiet.gia_ban];
             });
-            
+            console.log('Giá trị chi tiết hóa đơn xuất:', chiTietValues);
+
             connection.query('INSERT INTO chitiethoadonxuat (id_hoa_don_xuat, id_xe, so_luong, gia_ban, tong_gia) VALUES ?', [chiTietValues], function(err, result) {
                 if (err) {
-                    connection.rollback(function() {
-                        console.error('Lỗi khi thêm thông tin chi tiết hóa đơn xuất:', err);
-                        res.status(500).send('Lỗi khi thêm thông tin chi tiết hóa đơn xuất');
+                    console.error('Lỗi khi thêm thông tin chi tiết hóa đơn xuất:', err);
+                    return connection.rollback(function() {
+                        res.status(500).json({ message: 'Lỗi khi thêm thông tin chi tiết hóa đơn xuất' });
                     });
-                    return;
                 }
+
+                console.log('Thêm thông tin chi tiết hóa đơn xuất thành công');
 
                 // Cập nhật số lượng trong bảng quanlyxemay
                 var updatePromises = chiTietHoaDonXuat.map(function(chiTiet) {
                     return new Promise(function(resolve, reject) {
+                        console.log('Cập nhật số lượng cho xe ID:', chiTiet.id_xe);
                         connection.query('UPDATE quanlyxemay SET so_luong = so_luong - ? WHERE id_xe = ?', [chiTiet.so_luong, chiTiet.id_xe], function(err, result) {
                             if (err) {
+                                console.error('Lỗi khi cập nhật số lượng xe máy ID:', chiTiet.id_xe, 'Error:', err);
                                 reject(err);
                             } else {
+                                console.log('Cập nhật số lượng thành công cho xe ID:', chiTiet.id_xe);
                                 resolve();
                             }
                         });
@@ -132,20 +149,19 @@ router.post('/add', function(req, res) {
                         // Commit giao dịch nếu mọi thứ thành công
                         connection.commit(function(err) {
                             if (err) {
-                                connection.rollback(function() {
-                                    console.error('Lỗi khi commit giao dịch:', err);
-                                    res.status(500).send('Lỗi khi commit giao dịch');
+                                console.error('Lỗi khi commit giao dịch:', err);
+                                return connection.rollback(function() {
+                                    res.status(500).json({ message: 'Lỗi khi commit giao dịch' });
                                 });
-                                return;
                             }
                             console.log('Thêm hóa đơn xuất và thông tin chi tiết thành công!');
-                            res.status(200).send('Thêm hóa đơn xuất và thông tin chi tiết thành công!');
+                            res.status(200).json({ message: 'Thêm hóa đơn xuất và thông tin chi tiết thành công!' });
                         });
                     })
                     .catch(function(err) {
+                        console.error('Lỗi khi cập nhật số lượng xe máy:', err);
                         connection.rollback(function() {
-                            console.error('Lỗi khi cập nhật số lượng xe máy:', err);
-                            res.status(500).send('Lỗi khi cập nhật số lượng xe máy');
+                            res.status(500).json({ message: 'Lỗi khi cập nhật số lượng xe máy' });
                         });
                     });
             });

@@ -1124,7 +1124,7 @@ router.get('/san-pham-khuyen-mai', function(req, res) {
 
     const offset = (page - 1) * pageSize;
 
-    var query = 'SELECT * FROM quanlyxemay WHERE khuyen_mai IS NOT NULL ORDER BY khuyen_mai ASC';
+    var query = 'SELECT * FROM quanlyxemay WHERE khuyen_mai IS NOT NULL ORDER BY khuyen_mai DESC';
     query += ' LIMIT ?, ?'; // Add pagination
 
     connection.query(query, [offset, pageSize], function(error, results) {
