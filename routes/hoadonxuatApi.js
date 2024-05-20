@@ -80,9 +80,18 @@ router.post('/add', function(req, res) {
     console.log('hoaDonXuat:', hoaDonXuat);
     console.log('chiTietHoaDonXuat:', chiTietHoaDonXuat);
 
+    // Kiểm tra dữ liệu hợp lệ
     if (!hoaDonXuat || !chiTietHoaDonXuat || !Array.isArray(chiTietHoaDonXuat) || chiTietHoaDonXuat.length === 0) {
         console.error('Invalid data:', hoaDonXuat, chiTietHoaDonXuat);
         return res.status(400).json({ message: 'Dữ liệu không hợp lệ' });
+    }
+
+    // Kiểm tra từng phần tử của chiTietHoaDonXuat
+    for (let chiTiet of chiTietHoaDonXuat) {
+        if (!chiTiet.id_xe || typeof chiTiet.so_luong !== 'number' || typeof chiTiet.gia_ban !== 'number') {
+            console.error('Invalid chiTiet data:', chiTiet);
+            return res.status(400).json({ message: 'Dữ liệu chi tiết hóa đơn không hợp lệ' });
+        }
     }
 
     // Tính tổng giá từ các chi tiết hóa đơn xuất
@@ -168,6 +177,8 @@ router.post('/add', function(req, res) {
         });
     });
 });
+
+
 
 
 
