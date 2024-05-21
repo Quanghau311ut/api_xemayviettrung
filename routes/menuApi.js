@@ -10,6 +10,26 @@ router.get('/get-all', function(req, res) {
         res.json(result);
     });
 });
+//get-all-page
+router.get('/get-all-page', function(req, res) {
+    // Default values if not provided in query params
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) ||5;
+
+    // Calculate the offset
+    const offset = (page - 1) * limit;
+
+    // Modify the query to include LIMIT and OFFSET
+    var query = 'SELECT * FROM quanlymenu LIMIT ? OFFSET ?';
+
+    connection.query(query, [limit, offset], function(error, result) {
+        if (error) {
+            res.status(500).send('Lỗi thao tác csdl');
+        } else {
+            res.json(result);
+        }
+    });
+});
 
 //get-one
 router.get('/get-one/:id_menu', function(req, res) {
