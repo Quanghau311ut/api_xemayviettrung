@@ -19,6 +19,23 @@ router.get('/get-all', function(req, res) {
         }
     });
 });
+router.get('/get-all-page', function(req, res) {
+    var page = req.query.page || 1; // Default to page 1 if not provided
+    var pageSize = 5; // Number of records per page
+    var offset = (page - 1) * pageSize; // Calculate offset based on page number
+
+    var query = 'SELECT * FROM quanlykhachhang LIMIT ? OFFSET ?';
+    var params = [pageSize, offset];
+
+    connection.query(query, params, function(error, results) {
+        if (error) {
+            console.error('Lỗi thao tác với cơ sở dữ liệu:', error);
+            res.status(500).send('Lỗi thao tác với cơ sở dữ liệu');
+        } else {
+            res.json(results);
+        }
+    });
+});
 
 //get-one
 router.get('/get-one/:id_khach_hang', function(req, res) {

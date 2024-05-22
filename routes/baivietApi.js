@@ -18,7 +18,7 @@ router.get('/get-all', function(req, res) {
 //phân trang
 router.get('/get-page', function(req, res) {
     const page = parseInt(req.query.page) || 1; // Default to page 1 if not provided
-    const pageSize = parseInt(req.query.pageSize) || 3; // Default page size to 3 if not provided
+    const pageSize = parseInt(req.query.pageSize) || 6; // Default page size to 3 if not provided
 
     const offset = (page - 1) * pageSize;
 
