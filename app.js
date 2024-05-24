@@ -123,7 +123,10 @@ app.use(function(err, req, res, next) {
     // Render trang "error" với thông báo lỗi
     res.status(500).render('error', { error: err });
 });
-
+app.use((err, req, res, next) => {
+    console.error(err.stack);
+    res.status(500).render('error', { error: err });
+  });
 
 
 module.exports = app;

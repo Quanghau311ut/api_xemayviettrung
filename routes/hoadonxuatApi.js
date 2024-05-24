@@ -3,6 +3,34 @@ var router = express.Router();
 var connection = require('../service/dataconnect');
 
 //getall
+// router.get('/get-all', function(req, res) {
+//     // Truy vấn thông tin của tất cả hóa đơn xuất từ bảng quanlyhoadonxuat
+//     connection.query('SELECT * FROM quanlyhoadonxuat', function(error, hoaDonXuatResults) {
+//         if (error) {
+//             console.error('Lỗi truy vấn thông tin hóa đơn xuất:', error);
+//             return res.status(500).send('Lỗi truy vấn thông tin hóa đơn xuất');
+//         }
+
+//         // Truy vấn thông tin chi tiết hóa đơn xuất từ bảng chitiethoadonxuat
+//         connection.query('SELECT * FROM chitiethoadonxuat', function(error, chiTietHoaDonXuatResults) {
+//             if (error) {
+//                 console.error('Lỗi truy vấn thông tin chi tiết hóa đơn xuất:', error);
+//                 return res.status(500).send('Lỗi truy vấn thông tin chi tiết hóa đơn xuất');
+//             }
+
+//             // Gom thông tin chi tiết hóa đơn xuất vào mỗi hóa đơn xuất
+//             var hoaDonXuatData = hoaDonXuatResults.map(function(hoaDonXuat) {
+//                 var chiTietHoaDonXuat = chiTietHoaDonXuatResults.filter(function(chiTiet) {
+//                     return chiTiet.id_hoa_don_xuat === hoaDonXuat.id_hoa_don_xuat;
+//                 });
+//                 return { hoaDonXuat: hoaDonXuat, chiTietHoaDonXuat: chiTietHoaDonXuat };
+//             });
+
+//             // Trả về dữ liệu của tất cả hóa đơn xuất cùng với chi tiết
+//             res.json(hoaDonXuatData);
+//         });
+//     });
+// });
 router.get('/get-all', function(req, res) {
     // Truy vấn thông tin của tất cả hóa đơn xuất từ bảng quanlyhoadonxuat
     connection.query('SELECT * FROM quanlyhoadonxuat', function(error, hoaDonXuatResults) {
@@ -11,58 +39,61 @@ router.get('/get-all', function(req, res) {
             return res.status(500).send('Lỗi truy vấn thông tin hóa đơn xuất');
         }
 
-        // Truy vấn thông tin chi tiết hóa đơn xuất từ bảng chitiethoadonxuat
-        connection.query('SELECT * FROM chitiethoadonxuat', function(error, chiTietHoaDonXuatResults) {
-            if (error) {
-                console.error('Lỗi truy vấn thông tin chi tiết hóa đơn xuất:', error);
-                return res.status(500).send('Lỗi truy vấn thông tin chi tiết hóa đơn xuất');
-            }
-
-            // Gom thông tin chi tiết hóa đơn xuất vào mỗi hóa đơn xuất
-            var hoaDonXuatData = hoaDonXuatResults.map(function(hoaDonXuat) {
-                var chiTietHoaDonXuat = chiTietHoaDonXuatResults.filter(function(chiTiet) {
-                    return chiTiet.id_hoa_don_xuat === hoaDonXuat.id_hoa_don_xuat;
-                });
-                return { hoaDonXuat: hoaDonXuat, chiTietHoaDonXuat: chiTietHoaDonXuat };
-            });
-
-            // Trả về dữ liệu của tất cả hóa đơn xuất cùng với chi tiết
-            res.json(hoaDonXuatData);
-        });
+        // Trả về dữ liệu của tất cả hóa đơn xuất
+        res.json(hoaDonXuatResults);
     });
 });
 
 
+
 //get-one
+// router.get('/get-one/:id_hoa_don_xuat', function(req, res) {
+//     var hoaDonXuatId = req.params.id_hoa_don_xuat;
+
+//     // Truy vấn thông tin của hóa đơn xuất từ bảng quanlyhoadonxuat
+//     connection.query('SELECT * FROM quanlyhoadonxuat WHERE id_hoa_don_xuat = ?', hoaDonXuatId, function(error, hoaDonXuatResults) {
+//         if (error) {
+//             console.error('Lỗi truy vấn thông tin hóa đơn xuất:', error);
+//             return res.status(500).send('Lỗi truy vấn thông tin hóa đơn xuất');
+//         }
+
+//         if (hoaDonXuatResults.length === 0) {
+//             return res.status(404).send('Không tìm thấy hóa đơn xuất');
+//         }
+
+//         var hoaDonXuatData = hoaDonXuatResults[0];
+
+//         // Truy vấn thông tin chi tiết hóa đơn xuất từ bảng chitiethoadonxuat
+//         connection.query('SELECT * FROM chitiethoadonxuat WHERE id_hoa_don_xuat = ?', hoaDonXuatId, function(error, chiTietHoaDonXuatResults) {
+//             if (error) {
+//                 console.error('Lỗi truy vấn thông tin chi tiết hóa đơn xuất:', error);
+//                 return res.status(500).send('Lỗi truy vấn thông tin chi tiết hóa đơn xuất');
+//             }
+
+//             // Gán thông tin chi tiết vào dữ liệu của hóa đơn xuất
+//             hoaDonXuatData.chiTietHoaDonXuat = chiTietHoaDonXuatResults;
+
+//             // Trả về dữ liệu của hóa đơn xuất cùng với chi tiết
+//             res.json(hoaDonXuatData);
+//         });
+//     });
+// });
 router.get('/get-one/:id_hoa_don_xuat', function(req, res) {
     var hoaDonXuatId = req.params.id_hoa_don_xuat;
 
-    // Truy vấn thông tin của hóa đơn xuất từ bảng quanlyhoadonxuat
-    connection.query('SELECT * FROM quanlyhoadonxuat WHERE id_hoa_don_xuat = ?', hoaDonXuatId, function(error, hoaDonXuatResults) {
+    // Truy vấn thông tin chi tiết hóa đơn xuất từ bảng chitiethoadonxuat
+    connection.query('SELECT * FROM chitiethoadonxuat WHERE id_hoa_don_xuat = ?', [hoaDonXuatId], function(error, chiTietHoaDonXuatResults) {
         if (error) {
-            console.error('Lỗi truy vấn thông tin hóa đơn xuất:', error);
-            return res.status(500).send('Lỗi truy vấn thông tin hóa đơn xuất');
+            console.error('Lỗi truy vấn thông tin chi tiết hóa đơn xuất:', error);
+            return res.status(500).send('Lỗi truy vấn thông tin chi tiết hóa đơn xuất');
         }
 
-        if (hoaDonXuatResults.length === 0) {
-            return res.status(404).send('Không tìm thấy hóa đơn xuất');
+        if (chiTietHoaDonXuatResults.length === 0) {
+            return res.status(404).send('Không tìm thấy chi tiết hóa đơn xuất');
         }
 
-        var hoaDonXuatData = hoaDonXuatResults[0];
-
-        // Truy vấn thông tin chi tiết hóa đơn xuất từ bảng chitiethoadonxuat
-        connection.query('SELECT * FROM chitiethoadonxuat WHERE id_hoa_don_xuat = ?', hoaDonXuatId, function(error, chiTietHoaDonXuatResults) {
-            if (error) {
-                console.error('Lỗi truy vấn thông tin chi tiết hóa đơn xuất:', error);
-                return res.status(500).send('Lỗi truy vấn thông tin chi tiết hóa đơn xuất');
-            }
-
-            // Gán thông tin chi tiết vào dữ liệu của hóa đơn xuất
-            hoaDonXuatData.chiTietHoaDonXuat = chiTietHoaDonXuatResults;
-
-            // Trả về dữ liệu của hóa đơn xuất cùng với chi tiết
-            res.json(hoaDonXuatData);
-        });
+        // Trả về dữ liệu chi tiết hóa đơn xuất
+        res.json(chiTietHoaDonXuatResults);
     });
 });
 
