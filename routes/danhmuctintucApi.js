@@ -15,6 +15,25 @@ router.get('/get-all', function(req, res) {
         }
     });
 });
+//phân trang:
+router.get('/get-all-page', function(req, res) {
+    // Pagination parameters
+    const page = parseInt(req.query.page) || 1; // Default page is 1
+    const pageSize = parseInt(req.query.pageSize) ||5; // Default page size is 10
+    const offset = (page - 1) * pageSize;
+
+    // Query to retrieve paginated data
+    const query = `SELECT * FROM quanlydanhmuctin LIMIT ${pageSize} OFFSET ${offset}`;
+
+    connection.query(query, function(error, results) {
+        if (error) {
+            console.error('Error executing SQL query:', error);
+            return res.status(500).json({ error: 'Internal server error' });
+        } else {
+            res.json(results);
+        }
+    });
+});
 
 // router.get('/get-all', function(req, res) {
 //     var query = `

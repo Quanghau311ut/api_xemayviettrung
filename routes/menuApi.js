@@ -10,26 +10,44 @@ router.get('/get-all', function(req, res) {
         res.json(result);
     });
 });
-//get-all-page
+//phân trang
 router.get('/get-all-page', function(req, res) {
-    // Default values if not provided in query params
     const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) ||5;
+    const pageSize = parseInt(req.query.pageSize) ||5;
+    const offset = (page - 1) * pageSize;
 
-    // Calculate the offset
-    const offset = (page - 1) * limit;
+    const query = `
+        SELECT * FROM quanlymenu
+        LIMIT ? OFFSET ?;
+    `;
 
-    // Modify the query to include LIMIT and OFFSET
-    var query = 'SELECT * FROM quanlymenu LIMIT ? OFFSET ?';
+    const countQuery = 'SELECT COUNT(*) AS total FROM quanlymenu';
 
-    connection.query(query, [limit, offset], function(error, result) {
+    connection.query(countQuery, function(error, countResult) {
         if (error) {
-            res.status(500).send('Lỗi thao tác csdl');
-        } else {
-            res.json(result);
+            console.error('Lỗi thao tác với cơ sở dữ liệu:', error);
+            return res.status(500).send('Lỗi thao tác với cơ sở dữ liệu');
         }
+
+        const totalRecords = countResult[0].total;
+        const totalPages = Math.ceil(totalRecords / pageSize);
+
+        connection.query(query, [pageSize, offset], function(error, results) {
+            if (error) {
+                console.error('Lỗi thao tác với cơ sở dữ liệu:', error);
+                return res.status(500).send('Lỗi thao tác với cơ sở dữ liệu');
+            }
+
+            res.json({
+                data: results,
+                currentPage: page,
+                totalPages: totalPages,
+                totalRecords: totalRecords
+            });
+        });
     });
 });
+
 
 //get-one
 router.get('/get-one/:id_menu', function(req, res) {

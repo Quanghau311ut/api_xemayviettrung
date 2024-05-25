@@ -10,6 +10,46 @@ router.get('/get-all', function(req, res) {
         res.json(result);
     });
 });
+//phân trang
+router.get('/get-all-page', function(req, res) {
+    // Get page and pageSize from query parameters, set default values if not provided
+    const page = parseInt(req.query.page) || 1;
+    const pageSize = parseInt(req.query.pageSize) || 5;
+
+    // Calculate offset for pagination
+    const offset = (page - 1) * pageSize;
+
+    // Query to get total number of records
+    const countQuery = 'SELECT COUNT(*) AS total FROM quanlydanhmucxemay';
+
+    // Query to get paginated records
+    const dataQuery = `SELECT * FROM quanlydanhmucxemay LIMIT ${pageSize} OFFSET ${offset}`;
+
+    connection.query(countQuery, function(countError, countResult) {
+        if (countError) {
+            console.error('Lỗi thao tác csdl:', countError);
+            return res.status(500).send('Lỗi thao tác csdl');
+        }
+
+        const totalRecords = countResult[0].total;
+        const totalPages = Math.ceil(totalRecords / pageSize);
+
+        connection.query(dataQuery, function(dataError, dataResult) {
+            if (dataError) {
+                console.error('Lỗi thao tác csdl:', dataError);
+                return res.status(500).send('Lỗi thao tác csdl');
+            }
+
+            res.json({
+                data: dataResult,
+                currentPage: page,
+                totalPages: totalPages,
+                totalRecords: totalRecords
+            });
+        });
+    });
+});
+
 
 //get-one
 router.get('/get-one/:id_danh_muc', function(req, res) {

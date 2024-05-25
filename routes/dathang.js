@@ -44,6 +44,44 @@ router.get('/get-all', function(req, res) {
         res.json(results);
     });
 });
+router.get('/get-all-page', function(req, res) {
+    // Get page and limit from query parameters, with default values
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 5;
+    const offset = (page - 1) * limit;
+
+    // Query to get the paginated list of orders without details
+    const query = `
+        SELECT * FROM quanlydonhang LIMIT ? OFFSET ?
+    `;
+
+    connection.query(query, [limit, offset], function(error, orderResults) {
+        if (error) {
+            console.error('Lỗi truy vấn dữ liệu:', error);
+            return res.status(500).send('Lỗi truy vấn dữ liệu');
+        }
+
+        // Query to get the total count of orders
+        connection.query('SELECT COUNT(*) AS count FROM quanlydonhang', function(error, countResults) {
+            if (error) {
+                console.error('Lỗi truy vấn dữ liệu:', error);
+                return res.status(500).send('Lỗi truy vấn dữ liệu');
+            }
+
+            const totalRecords = countResults[0].count;
+            const totalPages = Math.ceil(totalRecords / limit);
+
+            // Return paginated results along with metadata
+            res.json({
+                totalRecords: totalRecords,
+                totalPages: totalPages,
+                currentPage: page,
+                recordsPerPage: limit,
+                data: orderResults
+            });
+        });
+    });
+});
 
 
 //get-one

@@ -44,7 +44,40 @@ router.get('/get-all', function(req, res) {
     });
 });
 
-
+router.get('/get-all-page', function(req, res) {
+    // Get page and limit from query parameters, with default values
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 5;
+    const offset = (page - 1) * limit;
+  
+    // Modify the query to include LIMIT and OFFSET
+    connection.query('SELECT * FROM quanlyhoadonxuat LIMIT ? OFFSET ?', [limit, offset], function(error, hoaDonXuatResults) {
+      if (error) {
+        console.error('Lỗi truy vấn thông tin hóa đơn xuất:', error);
+        return res.status(500).send('Lỗi truy vấn thông tin hóa đơn xuất');
+      }
+  
+      // Fetch the total count of records to return with the paginated results
+      connection.query('SELECT COUNT(*) AS count FROM quanlyhoadonxuat', function(error, countResults) {
+        if (error) {
+          console.error('Lỗi truy vấn tổng số hóa đơn xuất:', error);
+          return res.status(500).send('Lỗi truy vấn tổng số hóa đơn xuất');
+        }
+  
+        const totalRecords = countResults[0].count;
+        const totalPages = Math.ceil(totalRecords / limit);
+  
+        // Return paginated results along with metadata
+        res.json({
+          totalRecords: totalRecords,
+          totalPages: totalPages,
+          currentPage: page,
+          recordsPerPage: limit,
+          data: hoaDonXuatResults
+        });
+      });
+    });
+  });
 
 //get-one
 // router.get('/get-one/:id_hoa_don_xuat', function(req, res) {

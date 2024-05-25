@@ -21,6 +21,44 @@ router.get('/get-all', function(req, res) {
     });
 });
 
+router.get('/get-all-page', function(req, res) {
+    // Get page and limit from query parameters, with default values
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 5;
+    const offset = (page - 1) * limit;
+
+    // Query to get the paginated list of invoices without details
+    const query = `
+        SELECT * FROM quanlyhoadonnhap LIMIT ? OFFSET ?
+    `;
+
+    connection.query(query, [limit, offset], function(error, invoiceResults) {
+        if (error) {
+            console.error('Lỗi thao tác với cơ sở dữ liệu:', error);
+            res.status(500).send('Lỗi thao tác với cơ sở dữ liệu');
+        } else {
+            // Query to get the total count of invoices
+            connection.query('SELECT COUNT(*) AS count FROM quanlyhoadonnhap', function(error, countResults) {
+                if (error) {
+                    console.error('Lỗi thao tác với cơ sở dữ liệu:', error);
+                    res.status(500).send('Lỗi thao tác với cơ sở dữ liệu');
+                } else {
+                    const totalRecords = countResults[0].count;
+                    const totalPages = Math.ceil(totalRecords / limit);
+
+                    // Return paginated results along with metadata
+                    res.json({
+                        totalRecords: totalRecords,
+                        totalPages: totalPages,
+                        currentPage: page,
+                        recordsPerPage: limit,
+                        data: invoiceResults
+                    });
+                }
+            });
+        }
+    });
+});
 
 
 
