@@ -48,6 +48,60 @@ router.get('/san-pham-gan-het-hang', function(req, res) {
     });
 });
 
+// API để tính doanh thu nhập theo tháng
+router.get('/doanh-thu-nhap-theo-thang', function(req, res) {
+    // Tạo truy vấn SQL để tính tổng doanh thu nhập theo tháng
+    const query = `
+        SELECT 
+            YEAR(ngay) AS nam,
+            MONTH(ngay) AS thang,
+            SUM(tong_gia) AS tong_tien_nhap
+        FROM 
+            quanlyhoadonnhap
+        GROUP BY 
+            YEAR(ngay), MONTH(ngay)
+        ORDER BY 
+            nam, thang;
+    `;
+
+    // Thực thi truy vấn
+    connection.query(query, function(error, results) {
+        if (error) {
+            console.error('Lỗi thao tác với cơ sở dữ liệu:', error);
+            res.status(500).send('Lỗi thao tác với cơ sở dữ liệu');
+        } else {
+            res.json(results);
+        }
+    });
+});
+
+
+//daonh thu xuất theo tháng
+router.get('/doanh-thu-xuat-theo-thang', function(req, res) {
+    // Tạo truy vấn SQL để tính tổng doanh thu xuất theo tháng
+    const query = `
+        SELECT 
+            YEAR(ngay) AS nam,
+            MONTH(ngay) AS thang,
+            SUM(tong_gia) AS doanh_thu_xuat
+        FROM 
+            quanlyhoadonxuat
+        GROUP BY 
+            YEAR(ngay), MONTH(ngay)
+        ORDER BY 
+            nam, thang;
+    `;
+
+    // Thực thi truy vấn
+    connection.query(query, function(error, results) {
+        if (error) {
+            console.error('Lỗi thao tác với cơ sở dữ liệu:', error);
+            res.status(500).send('Lỗi thao tác với cơ sở dữ liệu');
+        } else {
+            res.json(results);
+        }
+    });
+});
 
 
 
