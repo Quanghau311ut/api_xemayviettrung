@@ -411,45 +411,45 @@ router.post("/add", function (req, res) {
 
 //edit
 router.post('/edit/:id_xe', function(req, res) {
-    console.log("Nhận được dữ liệu:", req.body); // Kiểm tra dữ liệu nhận được từ client
+    console.log("Dữ liệu nhận được từ client:", req.body); // Kiểm tra dữ liệu nhận được từ client
 
-    // Kiểm tra xem tất cả các trường cần thiết đã được cung cấp chưa
-    if (!req.body || !req.body.xe || !req.body.xe.id_thuong_hieu || !req.body.xe.id_danh_muc || !req.body.xe.ten_xe || !req.body.xe.model || !req.body.xe.mau_sac || !req.body.xe.nam_san_xuat || !req.body.xe.gia || !req.body.xe.so_luong) {
-        return res.status(400).send('Thiếu thông tin cần thiết');
+    // Kiểm tra xem các trường thông tin cần thiết đã được cung cấp chưa
+    if (!req.body || !req.body.xe || !req.body.thongSoKyThuat || !req.body.anhChiTiet) {
+        return res.status(400).send('Yêu cầu thiếu thông tin');
     }
 
     var id_xe = req.params.id_xe;
-    var xe = req.body.xe;
-    var thongSoKyThuat = req.body.thongSoKyThuat;
-    var anhChiTiet = req.body.anhChiTiet;
+    var xeData = req.body.xe;
+    var thongSoKyThuatData = req.body.thongSoKyThuat;
+    var anhChiTietData = req.body.anhChiTiet;
 
-    var queryXe = "UPDATE quanlyxemay SET id_thuong_hieu = ?, id_danh_muc = ?, ten_xe = ?, model = ?, mau_sac = ?, nam_san_xuat = ?, gia = ?, so_luong = ?, updated_at = CURRENT_TIMESTAMP WHERE id_xe = ?";
-    var valuesXe = [xe.id_thuong_hieu, xe.id_danh_muc, xe.ten_xe, xe.model, xe.mau_sac, xe.nam_san_xuat, xe.gia, xe.so_luong, id_xe];
+    var queryXe = "UPDATE quanlyxemay SET id_thuong_hieu = ?, id_danh_muc = ?, ten_xe = ?, model = ?, mau_sac = ?, nam_san_xuat = ?, gia = ?, khuyen_mai = ?, so_luong = ?, anh_dai_dien = ?, updated_at = CURRENT_TIMESTAMP WHERE id_xe = ?";
+    var valuesXe = [xeData.id_thuong_hieu, xeData.id_danh_muc, xeData.ten_xe, xeData.model, xeData.mau_sac, xeData.nam_san_xuat, xeData.gia, xeData.khuyen_mai, xeData.so_luong, xeData.anh_dai_dien, id_xe];
 
     connection.query(queryXe, valuesXe, function(error, resultXe) {
         if (error) {
             console.error('Lỗi khi cập nhật thông tin xe:', error);
             return res.status(500).send('Lỗi khi cập nhật thông tin xe');
         } else {
-            console.log('Đã cập nhật thành công thông tin xe:', resultXe);
+            console.log('Cập nhật thành công thông tin xe:', resultXe);
 
             // Nếu có dữ liệu thông số kỹ thuật
-            if (thongSoKyThuat) {
+            if (thongSoKyThuatData) {
                 var queryThongSoKyThuat = "UPDATE thongsokythuat SET dung_tich_xilanh = ?, cong_suat_toi_da = ?, momen_xoan_toi_da = ?, tieu_hao_nhien_lieu = ?, hop_so = ?, trong_luong = ?, updated_at = CURRENT_TIMESTAMP WHERE id_xe = ?";
-                var valuesThongSoKyThuat = [thongSoKyThuat.dung_tich_xilanh, thongSoKyThuat.cong_suat_toi_da, thongSoKyThuat.momen_xoan_toi_da, thongSoKyThuat.tieu_hao_nhien_lieu, thongSoKyThuat.hop_so, thongSoKyThuat.trong_luong, id_xe];
+                var valuesThongSoKyThuat = [thongSoKyThuatData.dung_tich_xilanh, thongSoKyThuatData.cong_suat_toi_da, thongSoKyThuatData.momen_xoan_toi_da, thongSoKyThuatData.tieu_hao_nhien_lieu, thongSoKyThuatData.hop_so, thongSoKyThuatData.trong_luong, id_xe];
 
                 connection.query(queryThongSoKyThuat, valuesThongSoKyThuat, function(error, resultThongSoKyThuat) {
                     if (error) {
                         console.error('Lỗi khi cập nhật thông số kỹ thuật:', error);
                         return res.status(500).send('Lỗi khi cập nhật thông số kỹ thuật');
                     } else {
-                        console.log('Đã cập nhật thành công thông số kỹ thuật:', resultThongSoKyThuat);
+                        console.log('Cập nhật thành công thông số kỹ thuật:', resultThongSoKyThuat);
                     }
                 });
             }
 
             // Nếu có dữ liệu ảnh chi tiết
-            if (anhChiTiet) {
+            if (anhChiTietData) {
                 // Xóa tất cả ảnh chi tiết cũ của xe
                 var queryDeleteAnhChiTiet = "DELETE FROM anhchitiet WHERE id_xe = ?";
                 connection.query(queryDeleteAnhChiTiet, [id_xe], function(error, resultDeleteAnhChiTiet) {
@@ -457,18 +457,18 @@ router.post('/edit/:id_xe', function(req, res) {
                         console.error('Lỗi khi xóa ảnh chi tiết cũ:', error);
                         return res.status(500).send('Lỗi khi xóa ảnh chi tiết cũ');
                     } else {
-                        console.log('Đã xóa thành công các ảnh chi tiết cũ:', resultDeleteAnhChiTiet);
+                        console.log('Xóa thành công các ảnh chi tiết cũ:', resultDeleteAnhChiTiet);
 
                         // Thêm ảnh chi tiết mới
                         var queryInsertAnhChiTiet = "INSERT INTO anhchitiet (id_xe, duong_dan_anh) VALUES ?";
-                        var valuesInsertAnhChiTiet = anhChiTiet.map(image => [id_xe, image.duong_dan_anh]);
+                        var valuesInsertAnhChiTiet = anhChiTietData.map(image => [id_xe, image.duong_dan_anh]);
 
                         connection.query(queryInsertAnhChiTiet, [valuesInsertAnhChiTiet], function(error, resultInsertAnhChiTiet) {
                             if (error) {
                                 console.error('Lỗi khi thêm ảnh chi tiết mới:', error);
                                 return res.status(500).send('Lỗi khi thêm ảnh chi tiết mới');
                             } else {
-                                console.log('Đã thêm thành công các ảnh chi tiết mới:', resultInsertAnhChiTiet);
+                                console.log('Thêm thành công các ảnh chi tiết mới:', resultInsertAnhChiTiet);
                             }
                         });
                     }
@@ -481,7 +481,145 @@ router.post('/edit/:id_xe', function(req, res) {
 });
 
 // router.post('/edit/:id_xe', function(req, res) {
-//     console.log("Dữ liệu nhận được:", req.body); // Kiểm tra dữ liệu nhận được từ client
+//     console.log("Nhận được dữ liệu:", req.body); // Kiểm tra dữ liệu nhận được từ client
+
+//     // Kiểm tra xem tất cả các trường cần thiết đã được cung cấp chưa
+//     if (!req.body || !req.body.xe || !req.body.xe.id_thuong_hieu || !req.body.xe.id_danh_muc || !req.body.xe.ten_xe || !req.body.xe.model || !req.body.xe.mau_sac || !req.body.xe.nam_san_xuat || !req.body.xe.gia || !req.body.xe.so_luong) {
+//         return res.status(400).send('Thiếu thông tin cần thiết');
+//     }
+
+//     var id_xe = req.params.id_xe;
+//     var xe = req.body.xe;
+//     var thongSoKyThuat = req.body.thongSoKyThuat;
+//     var anhChiTiet = req.body.anhChiTiet;
+
+//     var queryXe = "UPDATE quanlyxemay SET id_thuong_hieu = ?, id_danh_muc = ?, ten_xe = ?, model = ?, mau_sac = ?, nam_san_xuat = ?, gia = ?, so_luong = ?, updated_at = CURRENT_TIMESTAMP WHERE id_xe = ?";
+//     var valuesXe = [xe.id_thuong_hieu, xe.id_danh_muc, xe.ten_xe, xe.model, xe.mau_sac, xe.nam_san_xuat, xe.gia, xe.so_luong, id_xe];
+
+//     connection.query(queryXe, valuesXe, function(error, resultXe) {
+//         if (error) {
+//             console.error('Lỗi khi cập nhật thông tin xe:', error);
+//             return res.status(500).send('Lỗi khi cập nhật thông tin xe');
+//         } else {
+//             console.log('Đã cập nhật thành công thông tin xe:', resultXe);
+
+//             // Nếu có dữ liệu thông số kỹ thuật
+//             if (thongSoKyThuat) {
+//                 var queryThongSoKyThuat = "UPDATE thongsokythuat SET dung_tich_xilanh = ?, cong_suat_toi_da = ?, momen_xoan_toi_da = ?, tieu_hao_nhien_lieu = ?, hop_so = ?, trong_luong = ?, updated_at = CURRENT_TIMESTAMP WHERE id_xe = ?";
+//                 var valuesThongSoKyThuat = [thongSoKyThuat.dung_tich_xilanh, thongSoKyThuat.cong_suat_toi_da, thongSoKyThuat.momen_xoan_toi_da, thongSoKyThuat.tieu_hao_nhien_lieu, thongSoKyThuat.hop_so, thongSoKyThuat.trong_luong, id_xe];
+
+//                 connection.query(queryThongSoKyThuat, valuesThongSoKyThuat, function(error, resultThongSoKyThuat) {
+//                     if (error) {
+//                         console.error('Lỗi khi cập nhật thông số kỹ thuật:', error);
+//                         return res.status(500).send('Lỗi khi cập nhật thông số kỹ thuật');
+//                     } else {
+//                         console.log('Đã cập nhật thành công thông số kỹ thuật:', resultThongSoKyThuat);
+//                     }
+//                 });
+//             }
+
+//             // Nếu có dữ liệu ảnh chi tiết
+//             if (anhChiTiet) {
+//                 // Xóa tất cả ảnh chi tiết cũ của xe
+//                 var queryDeleteAnhChiTiet = "DELETE FROM anhchitiet WHERE id_xe = ?";
+//                 connection.query(queryDeleteAnhChiTiet, [id_xe], function(error, resultDeleteAnhChiTiet) {
+//                     if (error) {
+//                         console.error('Lỗi khi xóa ảnh chi tiết cũ:', error);
+//                         return res.status(500).send('Lỗi khi xóa ảnh chi tiết cũ');
+//                     } else {
+//                         console.log('Đã xóa thành công các ảnh chi tiết cũ:', resultDeleteAnhChiTiet);
+
+//                         // Thêm ảnh chi tiết mới
+//                         var queryInsertAnhChiTiet = "INSERT INTO anhchitiet (id_xe, duong_dan_anh) VALUES ?";
+//                         var valuesInsertAnhChiTiet = anhChiTiet.map(image => [id_xe, image.duong_dan_anh]);
+
+//                         connection.query(queryInsertAnhChiTiet, [valuesInsertAnhChiTiet], function(error, resultInsertAnhChiTiet) {
+//                             if (error) {
+//                                 console.error('Lỗi khi thêm ảnh chi tiết mới:', error);
+//                                 return res.status(500).send('Lỗi khi thêm ảnh chi tiết mới');
+//                             } else {
+//                                 console.log('Đã thêm thành công các ảnh chi tiết mới:', resultInsertAnhChiTiet);
+//                             }
+//                         });
+//                     }
+//                 });
+//             }
+
+//             return res.json(resultXe);
+//         }
+//     });
+// });
+
+// router.post('/edit/:id_xe', function(req, res) {
+//     console.log("Received data:", req.body); // Check the data received from the client
+
+//     // Check if all necessary fields are provided
+//     if (!req.body || !req.body.id_thuong_hieu || !req.body.id_danh_muc || !req.body.ten_xe || !req.body.model || !req.body.mau_sac || !req.body.nam_san_xuat || !req.body.gia || !req.body.so_luong) {
+//         return res.status(400).send('Missing required information');
+//     }
+
+//     var id_xe = req.params.id_xe;
+//     var thongSoKyThuat = req.body.thongSoKyThuat; // Technical specifications data from the client
+//     var anhChiTiet = req.body.anhChiTiet; // Detailed images data from the client
+
+//     var queryXe = "UPDATE quanlyxemay SET id_thuong_hieu = ?, id_danh_muc = ?, ten_xe = ?, model = ?, mau_sac = ?, nam_san_xuat = ?, gia = ?, so_luong = ?, updated_at = CURRENT_TIMESTAMP WHERE id_xe = ?";
+//     var valuesXe = [req.body.id_thuong_hieu, req.body.id_danh_muc, req.body.ten_xe, req.body.model, req.body.mau_sac, req.body.nam_san_xuat, req.body.gia, req.body.so_luong, id_xe];
+
+//     connection.query(queryXe, valuesXe, function(error, resultXe) {
+//         if (error) {
+//             console.error('Error updating motorcycle data:', error);
+//             return res.status(500).send('Error updating motorcycle data');
+//         } else {
+//             console.log('Successfully updated motorcycle data:', resultXe);
+
+//             // If there is technical specifications data
+//             if (thongSoKyThuat) {
+//                 var queryThongSoKyThuat = "UPDATE thongsokythuat SET dung_tich_xilanh = ?, cong_suat_toi_da = ?, momen_xoan_toi_da = ?, tieu_hao_nhien_lieu = ?, hop_so = ?, trong_luong = ?, updated_at = CURRENT_TIMESTAMP WHERE id_xe = ?";
+//                 var valuesThongSoKyThuat = [thongSoKyThuat.dung_tich_xilanh, thongSoKyThuat.cong_suat_toi_da, thongSoKyThuat.momen_xoan_toi_da, thongSoKyThuat.tieu_hao_nhien_lieu, thongSoKyThuat.hop_so, thongSoKyThuat.trong_luong, id_xe];
+
+//                 connection.query(queryThongSoKyThuat, valuesThongSoKyThuat, function(error, resultThongSoKyThuat) {
+//                     if (error) {
+//                         console.error('Error updating technical specifications:', error);
+//                         return res.status(500).send('Error updating technical specifications');
+//                     } else {
+//                         console.log('Successfully updated technical specifications:', resultThongSoKyThuat);
+//                     }
+//                 });
+//             }
+
+//             // If there is detailed images data
+//             if (anhChiTiet) {
+//                 // Delete all old detailed images of the motorcycle
+//                 var queryDeleteAnhChiTiet = "DELETE FROM anhchitiet WHERE id_xe = ?";
+//                 connection.query(queryDeleteAnhChiTiet, [id_xe], function(error, resultDeleteAnhChiTiet) {
+//                     if (error) {
+//                         console.error('Error deleting old detailed images:', error);
+//                         return res.status(500).send('Error deleting old detailed images');
+//                     } else {
+//                         console.log('Successfully deleted old detailed images:', resultDeleteAnhChiTiet);
+
+//                         // Insert new detailed images
+//                         var queryInsertAnhChiTiet = "INSERT INTO anhchitiet (id_xe, duong_dan_anh) VALUES ?";
+//                         var valuesInsertAnhChiTiet = anhChiTiet.map(image => [id_xe, image.duong_dan_anh]);
+
+//                         connection.query(queryInsertAnhChiTiet, [valuesInsertAnhChiTiet], function(error, resultInsertAnhChiTiet) {
+//                             if (error) {
+//                                 console.error('Error inserting new detailed images:', error);
+//                                 return res.status(500).send('Error inserting new detailed images');
+//                             } else {
+//                                 console.log('Successfully inserted new detailed images:', resultInsertAnhChiTiet);
+//                             }
+//                         });
+//                     }
+//                 });
+//             }
+
+//             return res.json(resultXe);
+//         }
+//     });
+// });
+// router.post('/edit/:id_xe', function(req, res) {
+//     console.log("Dữ liệu nhận được từ client:", req.body); // Kiểm tra dữ liệu nhận được từ client
 
 //     // Kiểm tra xem các trường thông tin cần thiết đã được cung cấp chưa
 //     if (!req.body || !req.body.id_thuong_hieu || !req.body.id_danh_muc || !req.body.ten_xe || !req.body.model || !req.body.mau_sac || !req.body.nam_san_xuat || !req.body.gia || !req.body.so_luong) {
@@ -492,15 +630,15 @@ router.post('/edit/:id_xe', function(req, res) {
 //     var thongSoKyThuat = req.body.thongSoKyThuat; // Dữ liệu thông số kỹ thuật từ client
 //     var anhChiTiet = req.body.anhChiTiet; // Dữ liệu ảnh chi tiết từ client
 
-//     var queryXe = "UPDATE quanlyxemay SET id_thuong_hieu = ?, id_danh_muc = ?, ten_xe = ?, model = ?, mau_sac = ?, nam_san_xuat = ?, gia = ?, so_luong = ?, updated_at = CURRENT_TIMESTAMP WHERE id_xe = ?";
-//     var valuesXe = [req.body.id_thuong_hieu, req.body.id_danh_muc, req.body.ten_xe, req.body.model, req.body.mau_sac, req.body.nam_san_xuat, req.body.gia, req.body.so_luong, id_xe];
+//     var queryXe = "UPDATE quanlyxemay SET id_thuong_hieu = ?, id_danh_muc = ?, ten_xe = ?, model = ?, mau_sac = ?, nam_san_xuat = ?, gia = ?, khuyen_mai = ?, so_luong = ?, anh_dai_dien = ?, updated_at = CURRENT_TIMESTAMP WHERE id_xe = ?";
+//     var valuesXe = [req.body.id_thuong_hieu, req.body.id_danh_muc, req.body.ten_xe, req.body.model, req.body.mau_sac, req.body.nam_san_xuat, req.body.gia, req.body.khuyen_mai, req.body.so_luong, req.body.anh_dai_dien, id_xe];
 
 //     connection.query(queryXe, valuesXe, function(error, resultXe) {
 //         if (error) {
-//             console.error('Lỗi thao tác với cơ sở dữ liệu (xe):', error);
-//             return res.status(500).send('Lỗi thao tác với cơ sở dữ liệu (xe)');
+//             console.error('Lỗi khi cập nhật thông tin xe:', error);
+//             return res.status(500).send('Lỗi khi cập nhật thông tin xe');
 //         } else {
-//             console.log('Sửa thành công thông tin xe:', resultXe);
+//             console.log('Cập nhật thành công thông tin xe:', resultXe);
 
 //             // Nếu có dữ liệu thông số kỹ thuật
 //             if (thongSoKyThuat) {
@@ -509,10 +647,10 @@ router.post('/edit/:id_xe', function(req, res) {
 
 //                 connection.query(queryThongSoKyThuat, valuesThongSoKyThuat, function(error, resultThongSoKyThuat) {
 //                     if (error) {
-//                         console.error('Lỗi thao tác với cơ sở dữ liệu (thông số kỹ thuật):', error);
-//                         return res.status(500).send('Lỗi thao tác với cơ sở dữ liệu (thông số kỹ thuật)');
+//                         console.error('Lỗi khi cập nhật thông số kỹ thuật:', error);
+//                         return res.status(500).send('Lỗi khi cập nhật thông số kỹ thuật');
 //                     } else {
-//                         console.log('Sửa thành công thông số kỹ thuật:', resultThongSoKyThuat);
+//                         console.log('Cập nhật thành công thông số kỹ thuật:', resultThongSoKyThuat);
 //                     }
 //                 });
 //             }
@@ -548,6 +686,7 @@ router.post('/edit/:id_xe', function(req, res) {
 //         }
 //     });
 // });
+
 
 
 //delete
