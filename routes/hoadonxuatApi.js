@@ -111,24 +111,85 @@ router.get('/get-all-page', function(req, res) {
 //         });
 //     });
 // });
+// router.get('/get-one/:id_hoa_don_xuat', function(req, res) {
+//     var hoaDonXuatId = req.params.id_hoa_don_xuat;
+
+//     // Truy vấn thông tin chi tiết hóa đơn xuất từ bảng chitiethoadonxuat
+//     connection.query('SELECT * FROM chitiethoadonxuat WHERE id_hoa_don_xuat = ?', [hoaDonXuatId], function(error, chiTietHoaDonXuatResults) {
+//         if (error) {
+//             console.error('Lỗi truy vấn thông tin chi tiết hóa đơn xuất:', error);
+//             return res.status(500).send('Lỗi truy vấn thông tin chi tiết hóa đơn xuất');
+//         }
+
+//         if (chiTietHoaDonXuatResults.length === 0) {
+//             return res.status(404).send('Không tìm thấy chi tiết hóa đơn xuất');
+//         }
+
+//         // Trả về dữ liệu chi tiết hóa đơn xuất
+//         res.json(chiTietHoaDonXuatResults);
+//     });
+// });
 router.get('/get-one/:id_hoa_don_xuat', function(req, res) {
     var hoaDonXuatId = req.params.id_hoa_don_xuat;
 
-    // Truy vấn thông tin chi tiết hóa đơn xuất từ bảng chitiethoadonxuat
-    connection.query('SELECT * FROM chitiethoadonxuat WHERE id_hoa_don_xuat = ?', [hoaDonXuatId], function(error, chiTietHoaDonXuatResults) {
+    // Truy vấn thông tin hóa đơn xuất từ bảng quanlyhoadonxuat
+    connection.query('SELECT * FROM quanlyhoadonxuat WHERE id_hoa_don_xuat = ?', [hoaDonXuatId], function(error, hoaDonXuatResult) {
         if (error) {
-            console.error('Lỗi truy vấn thông tin chi tiết hóa đơn xuất:', error);
-            return res.status(500).send('Lỗi truy vấn thông tin chi tiết hóa đơn xuất');
+            console.error('Lỗi truy vấn thông tin hóa đơn xuất:', error);
+            return res.status(500).send('Lỗi truy vấn thông tin hóa đơn xuất');
         }
 
-        if (chiTietHoaDonXuatResults.length === 0) {
-            return res.status(404).send('Không tìm thấy chi tiết hóa đơn xuất');
+        if (hoaDonXuatResult.length === 0) {
+            return res.status(404).send('Không tìm thấy hóa đơn xuất');
         }
 
-        // Trả về dữ liệu chi tiết hóa đơn xuất
-        res.json(chiTietHoaDonXuatResults);
+        var hoaDonXuat = hoaDonXuatResult[0];
+
+        // Truy vấn thông tin khách hàng từ bảng quanlykhachhang
+        connection.query('SELECT * FROM quanlykhachhang WHERE id_khach_hang = ?', [hoaDonXuat.id_khach_hang], function(error, khachHangResult) {
+            if (error) {
+                console.error('Lỗi truy vấn thông tin khách hàng:', error);
+                return res.status(500).send('Lỗi truy vấn thông tin khách hàng');
+            }
+
+            if (khachHangResult.length === 0) {
+                return res.status(404).send('Không tìm thấy thông tin khách hàng');
+            }
+
+            var khachHang = khachHangResult[0];
+
+            // Kết hợp thông tin hóa đơn xuất và thông tin khách hàng
+            var hoaDonXuatWithCustomerInfo = {
+                id_hoa_don_xuat: hoaDonXuat.id_hoa_don_xuat,
+                id_khach_hang: hoaDonXuat.id_khach_hang,
+                ten_khach_hang: khachHang.ten_khach_hang,
+                dia_chi: khachHang.dia_chi,
+                so_dien_thoai: khachHang.so_dien_thoai,
+                tong_gia: hoaDonXuat.tong_gia,
+                ngay: hoaDonXuat.ngay,
+                created_at: hoaDonXuat.created_at,
+                updated_at: hoaDonXuat.updated_at
+            };
+
+            // Truy vấn thông tin chi tiết hóa đơn xuất từ bảng chitiethoadonxuat
+            connection.query('SELECT * FROM chitiethoadonxuat WHERE id_hoa_don_xuat = ?', [hoaDonXuatId], function(error, chiTietHoaDonXuatResults) {
+                if (error) {
+                    console.error('Lỗi truy vấn thông tin chi tiết hóa đơn xuất:', error);
+                    return res.status(500).send('Lỗi truy vấn thông tin chi tiết hóa đơn xuất');
+                }
+
+                // Gửi về dữ liệu hoàn chỉnh
+                var hoaDonXuatData = {
+                    hoa_don_xuat: hoaDonXuatWithCustomerInfo,
+                    chi_tiet_hoa_don_xuat: chiTietHoaDonXuatResults
+                };
+                res.json(hoaDonXuatData);
+            });
+        });
     });
 });
+
+
 
 
 
