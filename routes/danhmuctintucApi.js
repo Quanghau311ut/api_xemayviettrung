@@ -19,7 +19,7 @@ router.get('/get-all', function(req, res) {
 router.get('/get-all-page', function(req, res) {
     // Pagination parameters
     const page = parseInt(req.query.page) || 1; // Default page is 1
-    const pageSize = parseInt(req.query.pageSize) ||5; // Default page size is 10
+    const pageSize = parseInt(req.query.pageSize) ||10; // Default page size is 10
     const offset = (page - 1) * pageSize;
 
     // Query to retrieve paginated data
