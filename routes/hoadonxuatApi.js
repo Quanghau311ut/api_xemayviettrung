@@ -44,56 +44,20 @@ router.get('/get-all', function(req, res) {
     });
 });
 
-// router.get('/get-all-page', function(req, res) {
-//     // Get page and limit from query parameters, with default values
-//     const page = parseInt(req.query.page) || 1;
-//     const limit = parseInt(req.query.limit) || 5;
-//     const offset = (page - 1) * limit;
-  
-//     // Modify the query to include LIMIT and OFFSET
-//     connection.query('SELECT * FROM quanlyhoadonxuat LIMIT ? OFFSET ?', [limit, offset], function(error, hoaDonXuatResults) {
-//       if (error) {
-//         console.error('Lỗi truy vấn thông tin hóa đơn xuất:', error);
-//         return res.status(500).send('Lỗi truy vấn thông tin hóa đơn xuất');
-//       }
-  
-//       // Fetch the total count of records to return with the paginated results
-//       connection.query('SELECT COUNT(*) AS count FROM quanlyhoadonxuat', function(error, countResults) {
-//         if (error) {
-//           console.error('Lỗi truy vấn tổng số hóa đơn xuất:', error);
-//           return res.status(500).send('Lỗi truy vấn tổng số hóa đơn xuất');
-//         }
-  
-//         const totalRecords = countResults[0].count;
-//         const totalPages = Math.ceil(totalRecords / limit);
-  
-//         // Return paginated results along with metadata
-//         res.json({
-//           totalRecords: totalRecords,
-//           totalPages: totalPages,
-//           currentPage: page,
-//           recordsPerPage: limit,
-//           data: hoaDonXuatResults
-//         });
-//       });
-//     });
-//   });
-
-
 router.get('/get-all-page', function(req, res) {
-    // Lấy trang và giới hạn từ các tham số truy vấn, với giá trị mặc định
+    // Get page and limit from query parameters, with default values
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 5;
     const offset = (page - 1) * limit;
   
-    // Sửa truy vấn để bao gồm LIMIT và OFFSET
-    connection.query('SELECT hdx.*, ctdh.* FROM quanlyhoadonxuat hdx JOIN chitietdonhang ctdh ON hdx.id_don_hang = ctdh.id_don_hang LIMIT ? OFFSET ?', [limit, offset], function(error, results) {
+    // Modify the query to include LIMIT and OFFSET
+    connection.query('SELECT * FROM quanlyhoadonxuat LIMIT ? OFFSET ?', [limit, offset], function(error, hoaDonXuatResults) {
       if (error) {
         console.error('Lỗi truy vấn thông tin hóa đơn xuất:', error);
         return res.status(500).send('Lỗi truy vấn thông tin hóa đơn xuất');
       }
   
-      // Lấy tổng số bản ghi để trả về kết quả phân trang
+      // Fetch the total count of records to return with the paginated results
       connection.query('SELECT COUNT(*) AS count FROM quanlyhoadonxuat', function(error, countResults) {
         if (error) {
           console.error('Lỗi truy vấn tổng số hóa đơn xuất:', error);
@@ -103,19 +67,17 @@ router.get('/get-all-page', function(req, res) {
         const totalRecords = countResults[0].count;
         const totalPages = Math.ceil(totalRecords / limit);
   
-        // Trả về kết quả phân trang cùng với các thông tin meta
+        // Return paginated results along with metadata
         res.json({
           totalRecords: totalRecords,
           totalPages: totalPages,
           currentPage: page,
           recordsPerPage: limit,
-          data: results // Trả về dữ liệu kết quả
+          data: hoaDonXuatResults
         });
       });
     });
-});
-
-
+  });
 
 //get-one
 // router.get('/get-one/:id_hoa_don_xuat', function(req, res) {
