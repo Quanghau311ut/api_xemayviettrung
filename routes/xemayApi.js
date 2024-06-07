@@ -284,6 +284,130 @@ router.get("/get-one/:id_xe", function (req, res) {
 //     });
 // });
 
+// router.post("/add", function (req, res) {
+//     console.log("Dữ liệu nhận được:", req.body); // Kiểm tra dữ liệu nhận được từ client
+
+//     // Kiểm tra xem các trường thông tin cần thiết đã được cung cấp chưa
+//     if (
+//         !req.body ||
+//         !req.body.xe ||
+//         !req.body.anhChiTiet ||
+//         !req.body.thongSoKyThuat ||
+//         !req.body.xe.anh_dai_dien
+//     ) {
+//         return res
+//             .status(400)
+//             .send(
+//                 "Yêu cầu thiếu thông tin hoặc trường anh_dai_dien không được tải lên"
+//             );
+//     }
+
+//     // Bắt đầu một transaction để đảm bảo tính nhất quán của cơ sở dữ liệu
+//     connection.beginTransaction(function (err) {
+//         if (err) {
+//             console.error("Lỗi bắt đầu transaction:", err);
+//             return res.status(500).send("Lỗi bắt đầu transaction");
+//         }
+
+//         // Thêm thông tin xe vào bảng quanlyxemay
+//         var queryXe =
+//             "INSERT INTO quanlyxemay (id_thuong_hieu, id_danh_muc, ten_xe, model, mau_sac, nam_san_xuat, gia, so_luong, anh_dai_dien,khuyen_mai, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?,?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)";
+//         var valuesXe = [
+//             req.body.xe.id_thuong_hieu,
+//             req.body.xe.id_danh_muc,
+//             req.body.xe.ten_xe,
+//             req.body.xe.model,
+//             req.body.xe.mau_sac,
+//             req.body.xe.nam_san_xuat,
+//             req.body.xe.gia,
+//             req.body.xe.so_luong,
+//             req.body.xe.anh_dai_dien,
+//             req.body.xe.khuyen_mai,
+//         ];
+
+//         connection.query(queryXe, valuesXe, function (errorXe, resultXe) {
+//             if (errorXe) {
+//                 console.error("Lỗi thêm thông tin xe:", errorXe);
+//                 return connection.rollback(function () {
+//                     res.status(500).send("Lỗi thêm thông tin xe");
+//                 });
+//             }
+
+//             // Thêm thông tin ảnh chi tiết vào bảng anhchitiet
+//             var queryAnhChiTiet =
+//                 "INSERT INTO anhchitiet (id_xe, duong_dan_anh, created_at, updated_at) VALUES ?";
+//             var valuesAnhChiTiet = req.body.anhChiTiet.map((image) => [
+//                 resultXe.insertId,
+//                 image.duong_dan_anh,
+//                 new Date(),
+//                 new Date(),
+//             ]);
+
+//             connection.query(
+//                 queryAnhChiTiet,
+//                 [valuesAnhChiTiet],
+//                 function (errorAnhChiTiet, resultAnhChiTiet) {
+//                     if (errorAnhChiTiet) {
+//                         console.error("Lỗi thêm thông tin ảnh chi tiết:", errorAnhChiTiet);
+//                         return connection.rollback(function () {
+//                             res.status(500).send("Lỗi thêm thông tin ảnh chi tiết");
+//                         });
+//                     }
+
+//                     // Thêm thông tin thông số kỹ thuật vào bảng thongsokythuat
+//                     var queryThongSoKyThuat =
+//                         "INSERT INTO thongsokythuat (id_xe, dung_tich_xilanh, cong_suat_toi_da, momen_xoan_toi_da, tieu_hao_nhien_lieu, hop_so, trong_luong, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)";
+//                     var valuesThongSoKyThuat = [
+//                         resultXe.insertId,
+//                         req.body.thongSoKyThuat.dung_tich_xilanh,
+//                         req.body.thongSoKyThuat.cong_suat_toi_da,
+//                         req.body.thongSoKyThuat.momen_xoan_toi_da,
+//                         req.body.thongSoKyThuat.tieu_hao_nhien_lieu,
+//                         req.body.thongSoKyThuat.hop_so,
+//                         req.body.thongSoKyThuat.trong_luong,
+//                     ];
+
+//                     connection.query(
+//                         queryThongSoKyThuat,
+//                         valuesThongSoKyThuat,
+//                         function (errorThongSoKyThuat, resultThongSoKyThuat) {
+//                             if (errorThongSoKyThuat) {
+//                                 console.error(
+//                                     "Lỗi thêm thông tin thông số kỹ thuật:",
+//                                     errorThongSoKyThuat
+//                                 );
+//                                 return connection.rollback(function () {
+//                                     res.status(500).send("Lỗi thêm thông tin thông số kỹ thuật");
+//                                 });
+//                             }
+
+//                             // Commit transaction sau khi thêm thành công
+//                             connection.commit(function (err) {
+//                                 if (err) {
+//                                     console.error("Lỗi commit transaction:", err);
+//                                     return connection.rollback(function () {
+//                                         res.status(500).send("Lỗi commit transaction");
+//                                     });
+//                                 }
+
+//                                 console.log(
+//                                     "Thêm thành công xe, ảnh chi tiết và thông số kỹ thuật"
+//                                 );
+
+//                                 // Trả về kết quả cho client
+//                                 res.json({
+//                                     xe: resultXe,
+//                                     anhChiTiet: resultAnhChiTiet,
+//                                     thongSoKyThuat: resultThongSoKyThuat,
+//                                 });
+//                             });
+//                         }
+//                     );
+//                 }
+//             );
+//         });
+//     });
+// });
 router.post("/add", function (req, res) {
     console.log("Dữ liệu nhận được:", req.body); // Kiểm tra dữ liệu nhận được từ client
 
@@ -356,7 +480,7 @@ router.post("/add", function (req, res) {
 
                     // Thêm thông tin thông số kỹ thuật vào bảng thongsokythuat
                     var queryThongSoKyThuat =
-                        "INSERT INTO thongsokythuat (id_xe, dung_tich_xilanh, cong_suat_toi_da, momen_xoan_toi_da, tieu_hao_nhien_lieu, hop_so, trong_luong, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)";
+                        "INSERT INTO thongsokythuat (id_xe, dung_tich_xilanh, cong_suat_toi_da, momen_xoan_toi_da, tieu_hao_nhien_lieu, hop_so, trong_luong, so_khung, so_may, dai_rong_cao, khoang_cach_truc_banh_xe, do_cao_yen, khoang_sang_gam_xe, dung_tich_binh_xang, kich_thuoc_lop_truoc, kich_thuoc_lop_sau, dung_tich_nhot_may, loai_truyen_dong, he_thong_khoi_dong, duong_kinh_pit_tong, ty_so_nen, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)";
                     var valuesThongSoKyThuat = [
                         resultXe.insertId,
                         req.body.thongSoKyThuat.dung_tich_xilanh,
@@ -365,6 +489,20 @@ router.post("/add", function (req, res) {
                         req.body.thongSoKyThuat.tieu_hao_nhien_lieu,
                         req.body.thongSoKyThuat.hop_so,
                         req.body.thongSoKyThuat.trong_luong,
+                        req.body.thongSoKyThuat.so_khung,
+                        req.body.thongSoKyThuat.so_may,
+                        req.body.thongSoKyThuat.dai_rong_cao,
+                        req.body.thongSoKyThuat.khoang_cach_truc_banh_xe,
+                        req.body.thongSoKyThuat.do_cao_yen,
+                        req.body.thongSoKyThuat.khoang_sang_gam_xe,
+                        req.body.thongSoKyThuat.dung_tich_binh_xang,
+                        req.body.thongSoKyThuat.kich_thuoc_lop_truoc,
+                        req.body.thongSoKyThuat.kich_thuoc_lop_sau,
+                        req.body.thongSoKyThuat.dung_tich_nhot_may,
+                        req.body.thongSoKyThuat.loai_truyen_dong,
+                        req.body.thongSoKyThuat.he_thong_khoi_dong,
+                        req.body.thongSoKyThuat.duong_kinh_pit_tong,
+                        req.body.thongSoKyThuat.ty_so_nen,
                     ];
 
                     connection.query(
@@ -391,7 +529,7 @@ router.post("/add", function (req, res) {
                                 }
 
                                 console.log(
-                                    "Thêm thành công xe, ảnh chi tiết và thông số kỹ thuật"
+                                    "Thêm thành công xe máy, ảnh chi tiết và thông số kỹ thuật"
                                 );
 
                                 // Trả về kết quả cho client
@@ -405,9 +543,11 @@ router.post("/add", function (req, res) {
                     );
                 }
             );
-        });
-    });
+        }
+    );
 });
+});
+
 
 //edit
 router.post('/edit/:id_xe', function(req, res) {
@@ -435,8 +575,8 @@ router.post('/edit/:id_xe', function(req, res) {
 
             // Nếu có dữ liệu thông số kỹ thuật
             if (thongSoKyThuatData) {
-                var queryThongSoKyThuat = "UPDATE thongsokythuat SET dung_tich_xilanh = ?, cong_suat_toi_da = ?, momen_xoan_toi_da = ?, tieu_hao_nhien_lieu = ?, hop_so = ?, trong_luong = ?, updated_at = CURRENT_TIMESTAMP WHERE id_xe = ?";
-                var valuesThongSoKyThuat = [thongSoKyThuatData.dung_tich_xilanh, thongSoKyThuatData.cong_suat_toi_da, thongSoKyThuatData.momen_xoan_toi_da, thongSoKyThuatData.tieu_hao_nhien_lieu, thongSoKyThuatData.hop_so, thongSoKyThuatData.trong_luong, id_xe];
+                var queryThongSoKyThuat = "UPDATE thongsokythuat SET dung_tich_xilanh = ?, cong_suat_toi_da = ?, momen_xoan_toi_da = ?, tieu_hao_nhien_lieu = ?, hop_so = ?, trong_luong = ?, so_khung = ?, so_may = ?, dai_rong_cao = ?, khoang_cach_truc_banh_xe = ?, do_cao_yen = ?, khoang_sang_gam_xe = ?, dung_tich_binh_xang = ?, kich_thuoc_lop_truoc = ?, kich_thuoc_lop_sau = ?, dung_tich_nhot_may = ?, loai_truyen_dong = ?, he_thong_khoi_dong = ?, duong_kinh_pit_tong = ?, ty_so_nen = ?, updated_at = CURRENT_TIMESTAMP WHERE id_xe = ?";
+                var valuesThongSoKyThuat = [thongSoKyThuatData.dung_tich_xilanh, thongSoKyThuatData.cong_suat_toi_da, thongSoKyThuatData.momen_xoan_toi_da, thongSoKyThuatData.tieu_hao_nhien_lieu, thongSoKyThuatData.hop_so, thongSoKyThuatData.trong_luong, thongSoKyThuatData.so_khung, thongSoKyThuatData.so_may, thongSoKyThuatData.dai_rong_cao, thongSoKyThuatData.khoang_cach_truc_banh_xe, thongSoKyThuatData.do_cao_yen, thongSoKyThuatData.khoang_sang_gam_xe, thongSoKyThuatData.dung_tich_binh_xang, thongSoKyThuatData.kich_thuoc_lop_truoc, thongSoKyThuatData.kich_thuoc_lop_sau, thongSoKyThuatData.dung_tich_nhot_may, thongSoKyThuatData.loai_truyen_dong, thongSoKyThuatData.he_thong_khoi_dong, thongSoKyThuatData.duong_kinh_pit_tong, thongSoKyThuatData.ty_so_nen, id_xe];
 
                 connection.query(queryThongSoKyThuat, valuesThongSoKyThuat, function(error, resultThongSoKyThuat) {
                     if (error) {
@@ -475,217 +615,11 @@ router.post('/edit/:id_xe', function(req, res) {
                 });
             }
 
-            return res.json(resultXe);
+            return res.json({ success: true });
         }
     });
 });
 
-// router.post('/edit/:id_xe', function(req, res) {
-//     console.log("Nhận được dữ liệu:", req.body); // Kiểm tra dữ liệu nhận được từ client
-
-//     // Kiểm tra xem tất cả các trường cần thiết đã được cung cấp chưa
-//     if (!req.body || !req.body.xe || !req.body.xe.id_thuong_hieu || !req.body.xe.id_danh_muc || !req.body.xe.ten_xe || !req.body.xe.model || !req.body.xe.mau_sac || !req.body.xe.nam_san_xuat || !req.body.xe.gia || !req.body.xe.so_luong) {
-//         return res.status(400).send('Thiếu thông tin cần thiết');
-//     }
-
-//     var id_xe = req.params.id_xe;
-//     var xe = req.body.xe;
-//     var thongSoKyThuat = req.body.thongSoKyThuat;
-//     var anhChiTiet = req.body.anhChiTiet;
-
-//     var queryXe = "UPDATE quanlyxemay SET id_thuong_hieu = ?, id_danh_muc = ?, ten_xe = ?, model = ?, mau_sac = ?, nam_san_xuat = ?, gia = ?, so_luong = ?, updated_at = CURRENT_TIMESTAMP WHERE id_xe = ?";
-//     var valuesXe = [xe.id_thuong_hieu, xe.id_danh_muc, xe.ten_xe, xe.model, xe.mau_sac, xe.nam_san_xuat, xe.gia, xe.so_luong, id_xe];
-
-//     connection.query(queryXe, valuesXe, function(error, resultXe) {
-//         if (error) {
-//             console.error('Lỗi khi cập nhật thông tin xe:', error);
-//             return res.status(500).send('Lỗi khi cập nhật thông tin xe');
-//         } else {
-//             console.log('Đã cập nhật thành công thông tin xe:', resultXe);
-
-//             // Nếu có dữ liệu thông số kỹ thuật
-//             if (thongSoKyThuat) {
-//                 var queryThongSoKyThuat = "UPDATE thongsokythuat SET dung_tich_xilanh = ?, cong_suat_toi_da = ?, momen_xoan_toi_da = ?, tieu_hao_nhien_lieu = ?, hop_so = ?, trong_luong = ?, updated_at = CURRENT_TIMESTAMP WHERE id_xe = ?";
-//                 var valuesThongSoKyThuat = [thongSoKyThuat.dung_tich_xilanh, thongSoKyThuat.cong_suat_toi_da, thongSoKyThuat.momen_xoan_toi_da, thongSoKyThuat.tieu_hao_nhien_lieu, thongSoKyThuat.hop_so, thongSoKyThuat.trong_luong, id_xe];
-
-//                 connection.query(queryThongSoKyThuat, valuesThongSoKyThuat, function(error, resultThongSoKyThuat) {
-//                     if (error) {
-//                         console.error('Lỗi khi cập nhật thông số kỹ thuật:', error);
-//                         return res.status(500).send('Lỗi khi cập nhật thông số kỹ thuật');
-//                     } else {
-//                         console.log('Đã cập nhật thành công thông số kỹ thuật:', resultThongSoKyThuat);
-//                     }
-//                 });
-//             }
-
-//             // Nếu có dữ liệu ảnh chi tiết
-//             if (anhChiTiet) {
-//                 // Xóa tất cả ảnh chi tiết cũ của xe
-//                 var queryDeleteAnhChiTiet = "DELETE FROM anhchitiet WHERE id_xe = ?";
-//                 connection.query(queryDeleteAnhChiTiet, [id_xe], function(error, resultDeleteAnhChiTiet) {
-//                     if (error) {
-//                         console.error('Lỗi khi xóa ảnh chi tiết cũ:', error);
-//                         return res.status(500).send('Lỗi khi xóa ảnh chi tiết cũ');
-//                     } else {
-//                         console.log('Đã xóa thành công các ảnh chi tiết cũ:', resultDeleteAnhChiTiet);
-
-//                         // Thêm ảnh chi tiết mới
-//                         var queryInsertAnhChiTiet = "INSERT INTO anhchitiet (id_xe, duong_dan_anh) VALUES ?";
-//                         var valuesInsertAnhChiTiet = anhChiTiet.map(image => [id_xe, image.duong_dan_anh]);
-
-//                         connection.query(queryInsertAnhChiTiet, [valuesInsertAnhChiTiet], function(error, resultInsertAnhChiTiet) {
-//                             if (error) {
-//                                 console.error('Lỗi khi thêm ảnh chi tiết mới:', error);
-//                                 return res.status(500).send('Lỗi khi thêm ảnh chi tiết mới');
-//                             } else {
-//                                 console.log('Đã thêm thành công các ảnh chi tiết mới:', resultInsertAnhChiTiet);
-//                             }
-//                         });
-//                     }
-//                 });
-//             }
-
-//             return res.json(resultXe);
-//         }
-//     });
-// });
-
-// router.post('/edit/:id_xe', function(req, res) {
-//     console.log("Received data:", req.body); // Check the data received from the client
-
-//     // Check if all necessary fields are provided
-//     if (!req.body || !req.body.id_thuong_hieu || !req.body.id_danh_muc || !req.body.ten_xe || !req.body.model || !req.body.mau_sac || !req.body.nam_san_xuat || !req.body.gia || !req.body.so_luong) {
-//         return res.status(400).send('Missing required information');
-//     }
-
-//     var id_xe = req.params.id_xe;
-//     var thongSoKyThuat = req.body.thongSoKyThuat; // Technical specifications data from the client
-//     var anhChiTiet = req.body.anhChiTiet; // Detailed images data from the client
-
-//     var queryXe = "UPDATE quanlyxemay SET id_thuong_hieu = ?, id_danh_muc = ?, ten_xe = ?, model = ?, mau_sac = ?, nam_san_xuat = ?, gia = ?, so_luong = ?, updated_at = CURRENT_TIMESTAMP WHERE id_xe = ?";
-//     var valuesXe = [req.body.id_thuong_hieu, req.body.id_danh_muc, req.body.ten_xe, req.body.model, req.body.mau_sac, req.body.nam_san_xuat, req.body.gia, req.body.so_luong, id_xe];
-
-//     connection.query(queryXe, valuesXe, function(error, resultXe) {
-//         if (error) {
-//             console.error('Error updating motorcycle data:', error);
-//             return res.status(500).send('Error updating motorcycle data');
-//         } else {
-//             console.log('Successfully updated motorcycle data:', resultXe);
-
-//             // If there is technical specifications data
-//             if (thongSoKyThuat) {
-//                 var queryThongSoKyThuat = "UPDATE thongsokythuat SET dung_tich_xilanh = ?, cong_suat_toi_da = ?, momen_xoan_toi_da = ?, tieu_hao_nhien_lieu = ?, hop_so = ?, trong_luong = ?, updated_at = CURRENT_TIMESTAMP WHERE id_xe = ?";
-//                 var valuesThongSoKyThuat = [thongSoKyThuat.dung_tich_xilanh, thongSoKyThuat.cong_suat_toi_da, thongSoKyThuat.momen_xoan_toi_da, thongSoKyThuat.tieu_hao_nhien_lieu, thongSoKyThuat.hop_so, thongSoKyThuat.trong_luong, id_xe];
-
-//                 connection.query(queryThongSoKyThuat, valuesThongSoKyThuat, function(error, resultThongSoKyThuat) {
-//                     if (error) {
-//                         console.error('Error updating technical specifications:', error);
-//                         return res.status(500).send('Error updating technical specifications');
-//                     } else {
-//                         console.log('Successfully updated technical specifications:', resultThongSoKyThuat);
-//                     }
-//                 });
-//             }
-
-//             // If there is detailed images data
-//             if (anhChiTiet) {
-//                 // Delete all old detailed images of the motorcycle
-//                 var queryDeleteAnhChiTiet = "DELETE FROM anhchitiet WHERE id_xe = ?";
-//                 connection.query(queryDeleteAnhChiTiet, [id_xe], function(error, resultDeleteAnhChiTiet) {
-//                     if (error) {
-//                         console.error('Error deleting old detailed images:', error);
-//                         return res.status(500).send('Error deleting old detailed images');
-//                     } else {
-//                         console.log('Successfully deleted old detailed images:', resultDeleteAnhChiTiet);
-
-//                         // Insert new detailed images
-//                         var queryInsertAnhChiTiet = "INSERT INTO anhchitiet (id_xe, duong_dan_anh) VALUES ?";
-//                         var valuesInsertAnhChiTiet = anhChiTiet.map(image => [id_xe, image.duong_dan_anh]);
-
-//                         connection.query(queryInsertAnhChiTiet, [valuesInsertAnhChiTiet], function(error, resultInsertAnhChiTiet) {
-//                             if (error) {
-//                                 console.error('Error inserting new detailed images:', error);
-//                                 return res.status(500).send('Error inserting new detailed images');
-//                             } else {
-//                                 console.log('Successfully inserted new detailed images:', resultInsertAnhChiTiet);
-//                             }
-//                         });
-//                     }
-//                 });
-//             }
-
-//             return res.json(resultXe);
-//         }
-//     });
-// });
-// router.post('/edit/:id_xe', function(req, res) {
-//     console.log("Dữ liệu nhận được từ client:", req.body); // Kiểm tra dữ liệu nhận được từ client
-
-//     // Kiểm tra xem các trường thông tin cần thiết đã được cung cấp chưa
-//     if (!req.body || !req.body.id_thuong_hieu || !req.body.id_danh_muc || !req.body.ten_xe || !req.body.model || !req.body.mau_sac || !req.body.nam_san_xuat || !req.body.gia || !req.body.so_luong) {
-//         return res.status(400).send('Yêu cầu thiếu thông tin');
-//     }
-
-//     var id_xe = req.params.id_xe;
-//     var thongSoKyThuat = req.body.thongSoKyThuat; // Dữ liệu thông số kỹ thuật từ client
-//     var anhChiTiet = req.body.anhChiTiet; // Dữ liệu ảnh chi tiết từ client
-
-//     var queryXe = "UPDATE quanlyxemay SET id_thuong_hieu = ?, id_danh_muc = ?, ten_xe = ?, model = ?, mau_sac = ?, nam_san_xuat = ?, gia = ?, khuyen_mai = ?, so_luong = ?, anh_dai_dien = ?, updated_at = CURRENT_TIMESTAMP WHERE id_xe = ?";
-//     var valuesXe = [req.body.id_thuong_hieu, req.body.id_danh_muc, req.body.ten_xe, req.body.model, req.body.mau_sac, req.body.nam_san_xuat, req.body.gia, req.body.khuyen_mai, req.body.so_luong, req.body.anh_dai_dien, id_xe];
-
-//     connection.query(queryXe, valuesXe, function(error, resultXe) {
-//         if (error) {
-//             console.error('Lỗi khi cập nhật thông tin xe:', error);
-//             return res.status(500).send('Lỗi khi cập nhật thông tin xe');
-//         } else {
-//             console.log('Cập nhật thành công thông tin xe:', resultXe);
-
-//             // Nếu có dữ liệu thông số kỹ thuật
-//             if (thongSoKyThuat) {
-//                 var queryThongSoKyThuat = "UPDATE thongsokythuat SET dung_tich_xilanh = ?, cong_suat_toi_da = ?, momen_xoan_toi_da = ?, tieu_hao_nhien_lieu = ?, hop_so = ?, trong_luong = ?, updated_at = CURRENT_TIMESTAMP WHERE id_xe = ?";
-//                 var valuesThongSoKyThuat = [thongSoKyThuat.dung_tich_xilanh, thongSoKyThuat.cong_suat_toi_da, thongSoKyThuat.momen_xoan_toi_da, thongSoKyThuat.tieu_hao_nhien_lieu, thongSoKyThuat.hop_so, thongSoKyThuat.trong_luong, id_xe];
-
-//                 connection.query(queryThongSoKyThuat, valuesThongSoKyThuat, function(error, resultThongSoKyThuat) {
-//                     if (error) {
-//                         console.error('Lỗi khi cập nhật thông số kỹ thuật:', error);
-//                         return res.status(500).send('Lỗi khi cập nhật thông số kỹ thuật');
-//                     } else {
-//                         console.log('Cập nhật thành công thông số kỹ thuật:', resultThongSoKyThuat);
-//                     }
-//                 });
-//             }
-
-//             // Nếu có dữ liệu ảnh chi tiết
-//             if (anhChiTiet) {
-//                 // Xóa tất cả ảnh chi tiết cũ của xe
-//                 var queryDeleteAnhChiTiet = "DELETE FROM anhchitiet WHERE id_xe = ?";
-//                 connection.query(queryDeleteAnhChiTiet, [id_xe], function(error, resultDeleteAnhChiTiet) {
-//                     if (error) {
-//                         console.error('Lỗi khi xóa ảnh chi tiết cũ:', error);
-//                         return res.status(500).send('Lỗi khi xóa ảnh chi tiết cũ');
-//                     } else {
-//                         console.log('Xóa thành công các ảnh chi tiết cũ:', resultDeleteAnhChiTiet);
-
-//                         // Thêm ảnh chi tiết mới
-//                         var queryInsertAnhChiTiet = "INSERT INTO anhchitiet (id_xe, duong_dan_anh) VALUES ?";
-//                         var valuesInsertAnhChiTiet = anhChiTiet.map(image => [id_xe, image.duong_dan_anh]);
-
-//                         connection.query(queryInsertAnhChiTiet, [valuesInsertAnhChiTiet], function(error, resultInsertAnhChiTiet) {
-//                             if (error) {
-//                                 console.error('Lỗi khi thêm ảnh chi tiết mới:', error);
-//                                 return res.status(500).send('Lỗi khi thêm ảnh chi tiết mới');
-//                             } else {
-//                                 console.log('Thêm thành công các ảnh chi tiết mới:', resultInsertAnhChiTiet);
-//                             }
-//                         });
-//                     }
-//                 });
-//             }
-
-//             return res.json(resultXe);
-//         }
-//     });
-// });
 
 
 
