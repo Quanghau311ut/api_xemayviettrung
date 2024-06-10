@@ -842,7 +842,6 @@ router.get("/LayDuLieuXeMayTheoDanhMuc/:id_danh_muc", function (req, res) {
 });
 
 //lọc xe máy theo khoảng giá
-
 router.get("/LocSanPhamTheoKhoangGia/:minPrice/:maxPrice", function (req, res) {
     var minPrice = req.params.minPrice;
     var maxPrice = req.params.maxPrice;
@@ -857,19 +856,9 @@ router.get("/LocSanPhamTheoKhoangGia/:minPrice/:maxPrice", function (req, res) {
             qx.gia,
             qx.so_luong,
             qx.anh_dai_dien,
-            ts.dung_tich_xilanh,
-            ts.cong_suat_toi_da,
-            ts.momen_xoan_toi_da,
-            ts.tieu_hao_nhien_lieu,
-            ts.hop_so,
-            ts.trong_luong,
-            ac.duong_dan_anh
+            qx.khuyen_mai
         FROM 
             quanlyxemay qx
-        JOIN 
-            thongsokythuat ts ON qx.id_xe = ts.id_xe
-        JOIN 
-            anhchitiet ac ON qx.id_xe = ac.id_xe
         WHERE 
             qx.gia BETWEEN ? AND ?
     `;
@@ -894,6 +883,58 @@ router.get("/LocSanPhamTheoKhoangGia/:minPrice/:maxPrice", function (req, res) {
     });
 });
 
+
+// router.get("/LocSanPhamTheoKhoangGia/:minPrice/:maxPrice", function (req, res) {
+//     var minPrice = req.params.minPrice;
+//     var maxPrice = req.params.maxPrice;
+
+//     var query = `
+//         SELECT 
+//             qx.id_xe,
+//             qx.ten_xe,
+//             qx.model,
+//             qx.mau_sac,
+//             qx.nam_san_xuat,
+//             qx.gia,
+//             qx.so_luong,
+//             qx.anh_dai_dien,
+//             ts.dung_tich_xilanh,
+//             ts.cong_suat_toi_da,
+//             ts.momen_xoan_toi_da,
+//             ts.tieu_hao_nhien_lieu,
+//             ts.hop_so,
+//             ts.trong_luong,
+//             ac.duong_dan_anh
+//         FROM 
+//             quanlyxemay qx
+//         JOIN 
+//             thongsokythuat ts ON qx.id_xe = ts.id_xe
+//         JOIN 
+//             anhchitiet ac ON qx.id_xe = ac.id_xe
+//         WHERE 
+//             qx.gia BETWEEN ? AND ?
+//     `;
+
+//     connection.query(query, [minPrice, maxPrice], function (error, results) {
+//         if (error) {
+//             console.error("Lỗi khi lọc sản phẩm theo khoảng giá:", error);
+//             return res
+//                 .status(500)
+//                 .json({ error: "Lỗi khi lọc sản phẩm theo khoảng giá" });
+//         }
+
+//         // Kiểm tra nếu không có sản phẩm nào thỏa mãn điều kiện, trả về thông báo
+//         if (results.length === 0) {
+//             return res
+//                 .status(404)
+//                 .json({ message: "Không tìm thấy sản phẩm nào trong khoảng giá này" });
+//         }
+
+//         // Gửi kết quả về cho client
+//         res.json(results);
+//     });
+// });
+
 // sắp xếp giá tăng dần
 router.get("/Sap-Xep-Gia-Tang-Dan", function (req, res) {
     var query = `
@@ -905,20 +946,9 @@ router.get("/Sap-Xep-Gia-Tang-Dan", function (req, res) {
             qx.nam_san_xuat,
             qx.gia,
             qx.so_luong,
-            qx.anh_dai_dien,
-            ts.dung_tich_xilanh,
-            ts.cong_suat_toi_da,
-            ts.momen_xoan_toi_da,
-            ts.tieu_hao_nhien_lieu,
-            ts.hop_so,
-            ts.trong_luong,
-            ac.duong_dan_anh
+            qx.anh_dai_dien
         FROM 
             quanlyxemay qx
-        JOIN 
-            thongsokythuat ts ON qx.id_xe = ts.id_xe
-        JOIN 
-            anhchitiet ac ON qx.id_xe = ac.id_xe
         ORDER BY 
             qx.gia ASC
     `;
@@ -959,20 +989,9 @@ router.get("/Sap-Xep-Gia-Giam-Dan", function (req, res) {
             qx.nam_san_xuat,
             qx.gia,
             qx.so_luong,
-            qx.anh_dai_dien,
-            ts.dung_tich_xilanh,
-            ts.cong_suat_toi_da,
-            ts.momen_xoan_toi_da,
-            ts.tieu_hao_nhien_lieu,
-            ts.hop_so,
-            ts.trong_luong,
-            ac.duong_dan_anh
+            qx.anh_dai_dien
         FROM 
             quanlyxemay qx
-        JOIN 
-            thongsokythuat ts ON qx.id_xe = ts.id_xe
-        JOIN 
-            anhchitiet ac ON qx.id_xe = ac.id_xe
         ORDER BY 
             qx.gia DESC
     `;
